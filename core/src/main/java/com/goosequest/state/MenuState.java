@@ -50,12 +50,14 @@ public class MenuState extends GameState {
         Inventory inv = gm.getInventory();
         List<Item> items = inv.getItems();
 
+        Art.enableBlend();
         gm.shapes.setProjectionMatrix(uiCam.combined);
         gm.shapes.begin(ShapeType.Filled);
+        gm.shapes.setColor(0f, 0f, 0f, 0.35f);
+        gm.shapes.rect(0, 0, GameManager.VIEW_W, GameManager.VIEW_H);
         Art.box(gm.shapes, 100, 80, 600, 440);
         if (!items.isEmpty()) {
-            gm.shapes.setColor(Color.YELLOW);
-            gm.shapes.rect(370, 412 - cursor * 26, 10, 10);
+            Art.cursor(gm.shapes, 368, 410 - cursor * 26, 12);
         }
         gm.shapes.end();
 

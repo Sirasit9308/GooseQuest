@@ -54,7 +54,8 @@ public class MapEnemy extends Entity implements Interactable {
 
     @Override
     public void draw(ShapeRenderer s, float t) {
-        Art.enemy(s, enemy.getColor(), x * t, y * t, t);
+        Art.shadow(s, x * t + t / 2, y * t + 3, t * 0.8f);
+        Art.enemy(s, enemy.getColor(), x * t, y * t + 1 + Art.bob(x * 2.3f + y * 1.1f, 1f), t);
     }
 
     public Enemy getEnemy() { return enemy; }

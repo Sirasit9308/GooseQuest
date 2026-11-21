@@ -1,7 +1,10 @@
 package com.goosequest.world.tile;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.goosequest.state.ExploreState;
+import com.goosequest.util.Art;
+import com.goosequest.util.Palette;
 
 /**
  * [คนที่ 3] ทางออกไปแผนที่อื่น เหยียบแล้ววาร์ป
@@ -25,6 +28,18 @@ public class DoorTile extends Tile {
 
     @Override
     public Color getColor() { return COLOR; }
+
+    /** ทางดินต่อออกนอกแผนที่ + ประกายสีทองกะพริบ บอกว่าเดินผ่านไปได้ */
+    @Override
+    public void draw(ShapeRenderer s, float px, float py, float t) {
+        PathTile.paint(s, px, py, t);
+        float a = 0.35f + 0.35f * (float) Math.sin(Art.time() * 4f);
+        Color g = Palette.GOLD;
+        s.setColor(g.r, g.g, g.b, a);
+        s.circle(px + t / 2, py + t / 2, t * 0.3f);
+        s.setColor(1f, 1f, 1f, a);
+        s.circle(px + t / 2, py + t / 2, t * 0.12f);
+    }
 
     @Override
     public void onStep(ExploreState state) {

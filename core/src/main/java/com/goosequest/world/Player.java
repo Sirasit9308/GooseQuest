@@ -10,6 +10,9 @@ import com.goosequest.util.Art;
 public class Player extends Entity {
     @Override
     public void draw(ShapeRenderer shapes, float t) {
-        Art.goose(shapes, x * t, y * t, t / 32f, facing == Direction.LEFT);
+        float px = x * t;
+        float py = y * t;
+        Art.shadow(shapes, px + t / 2, py + 2, t * 0.75f);
+        Art.goose(shapes, px, py + 1 + Art.bob(0f, 1f), t / 32f, facing == Direction.LEFT);
     }
 }
