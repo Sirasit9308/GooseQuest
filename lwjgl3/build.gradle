@@ -1,0 +1,19 @@
+apply plugin: 'application'
+
+application {
+    mainClass = 'com.goosequest.lwjgl3.Lwjgl3Launcher'
+}
+
+dependencies {
+    implementation project(':core')
+    implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+    implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+}
+
+run {
+    workingDir = rootProject.projectDir
+    // macOS ต้องใช้ flag นี้ ไม่งั้นหน้าต่างไม่ขึ้น
+    if (System.getProperty('os.name').toLowerCase().contains('mac')) {
+        jvmArgs '-XstartOnFirstThread'
+    }
+}
