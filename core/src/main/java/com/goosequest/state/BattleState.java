@@ -10,6 +10,7 @@ import com.goosequest.character.Goose;
 import com.goosequest.item.Item;
 import com.goosequest.util.Art;
 import com.goosequest.util.Keys;
+import com.goosequest.util.Palette;
 import com.goosequest.world.MapEnemy;
 
 import java.util.List;
@@ -101,18 +102,18 @@ public class BattleState extends GameState {
         Enemy enemy = battle.getEnemy();
 
         gm.shapes.setProjectionMatrix(uiCam.combined);
+        Art.enableBlend();
         gm.shapes.begin(ShapeType.Filled);
-        // ฉากหลัง: ฟ้า + พื้นหญ้า
-        gm.shapes.setColor(0.55f, 0.8f, 0.95f, 1f);
-        gm.shapes.rect(0, 200, GameManager.VIEW_W, GameManager.VIEW_H - 200);
-        gm.shapes.setColor(0.45f, 0.75f, 0.35f, 1f);
-        gm.shapes.rect(0, 200, GameManager.VIEW_W, 140);
-        gm.shapes.setColor(0.35f, 0.65f, 0.3f, 1f);
-        gm.shapes.ellipse(470, 380, 260, 60);
-        gm.shapes.ellipse(60, 215, 280, 60);
+        drawBackground();
 
-        if (enemy.isAlive()) Art.enemy(gm.shapes, enemy.getColor(), 540, 400, 140);
-        if (hero.isAlive()) Art.goose(gm.shapes, 120, 230, 5f, false);
+        if (enemy.isAlive()) {
+            Art.shadow(gm.shapes, 610, 414, 150);
+            Art.enemy(gm.shapes, enemy.getColor(), 540, 400 + Art.bob(1.3f, 3f), 140);
+        }
+        if (hero.isAlive()) {
+            Art.shadow(gm.shapes, 200, 232, 150);
+            Art.goose(gm.shapes, 120, 230 + Art.bob(0f, 2f), 5f, false);
+        }
 
         statusPanel(enemy, 40, 470);
         statusPanel(hero, 470, 250);
@@ -121,19 +122,63 @@ public class BattleState extends GameState {
         Art.box(gm.shapes, 10, 10, 560, 180);
         Art.box(gm.shapes, 580, 10, 210, 180);
         if (mode != Mode.END) {
-            gm.shapes.setColor(Color.YELLOW);
-            gm.shapes.rect(600, 152 - cursor * 30, 10, 10);
+            Art.cursor(gm.shapes, 598, 150 - cursor * 30, 12);
         }
         gm.shapes.end();
 
         drawText(hero, enemy);
     }
 
+    /** ฉากหลัง: ท้องฟ้าไล่สี เมฆลอย เนินเขา 2 ชั้น และแท่นหญ้าที่ตัวละครยืน */
+    private void drawBackground() {
+        float w = GameManager.VIEW_W;
+        float h = GameManager.VIEW_H;
+        // ฟ้าไล่สี (ล่างอ่อน บนเข้ม)
+        gm.shapes.rect(0, 200, w, h - 200, Palette.SKY_BOTTOM, Palette.SKY_BOTTOM, Palette.SKY_TOP, Palette.SKY_TOP);
+        // เมฆเลื่อนช้า ๆ
+        for (int i = 0; i < 4; i++) {
+            float cx = ((i * 260 + Art.time() * (8 + i * 3)) % (w + 240)) - 120;
+            float cy = 545 - (i % 2) * 45;
+            cloud(cx, cy, 1f - i * 0.12f);
+        }
+        // เนินเขาไกล + ใกล้
+        gm.shapes.setColor(Palette.HILL_FAR);
+        gm.shapes.ellipse(-120, 280, 520, 200);
+        gm.shapes.ellipse(260, 300, 420, 170);
+        gm.shapes.setColor(Palette.HILL_NEAR);
+        gm.shapes.ellipse(360, 270, 560, 210);
+        gm.shapes.ellipse(-80, 260, 420, 150);
+        // พื้นหญ้า
+        gm.shapes.setColor(Palette.GRASS);
+        gm.shapes.rect(0, 200, w, 150);
+        gm.shapes.setColor(Palette.GRASS_DARK);
+        gm.shapes.rect(0, 346, w, 4);
+        // แท่นที่ยืน
+        platform(470, 380, 270, 64);
+        platform(50, 205, 300, 64);
+    }
+
+    private void cloud(float cx, float cy, float k) {
+        gm.shapes.setColor(1f, 1f, 1f, 0.85f);
+        gm.shapes.ellipse(cx - 50 * k, cy - 14 * k, 100 * k, 30 * k);
+        gm.shapes.circle(cx - 18 * k, cy + 4 * k, 20 * k);
+        gm.shapes.circle(cx + 14 * k, cy + 8 * k, 24 * k);
+    }
+
+    private void platform(float x, float y, float w, float h) {
+        gm.shapes.setColor(Palette.GRASS_DARK);
+        gm.shapes.ellipse(x, y - 6, w, h);
+        gm.shapes.setColor(Palette.GRASS_LIGHT);
+        gm.shapes.ellipse(x + 6, y, w - 12, h - 8);
+        gm.shapes.setColor(Palette.GRASS);
+        gm.shapes.ellipse(x + 16, y + 4, w - 32, h - 18);
+    }
+
     private void statusPanel(Character c, float x, float y) {
         Art.box(gm.shapes, x, y, 290, 80);
-        Art.bar(gm.shapes, x + 50, y + 30, 220, 12, (float) c.getHp() / c.getMaxHp(), Color.RED);
+        Art.bar(gm.shapes, x + 50, y + 30, 220, 12, (float) c.getHp() / c.getMaxHp(), Palette.HP);
         if (c.getMaxMp() > 0) {
-            Art.bar(gm.shapes, x + 50, y + 12, 220, 8, (float) c.getMp() / c.getMaxMp(), Color.SKY);
+            Art.bar(gm.shapes, x + 50, y + 12, 220, 8, (float) c.getMp() / c.getMaxMp(), Palette.MP);
         }
     }
 

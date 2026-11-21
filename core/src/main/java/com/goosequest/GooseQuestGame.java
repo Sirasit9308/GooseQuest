@@ -4,6 +4,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.goosequest.state.TitleState;
+import com.goosequest.util.Palette;
 
 /** ตัวเกมหลักที่ libGDX เรียกใช้ ส่งงานทั้งหมดต่อให้ GameManager */
 public class GooseQuestGame extends ApplicationAdapter {
@@ -17,7 +18,7 @@ public class GooseQuestGame extends ApplicationAdapter {
 
     @Override
     public void render() {
-        ScreenUtils.clear(0.1f, 0.1f, 0.15f, 1f);
+        ScreenUtils.clear(Palette.BG);
         gm.update(Gdx.graphics.getDeltaTime());
         gm.render();
     }

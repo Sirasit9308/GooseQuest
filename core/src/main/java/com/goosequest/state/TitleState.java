@@ -37,13 +37,14 @@ public class TitleState extends GameState {
     public void render() {
         gm.shapes.setProjectionMatrix(uiCam.combined);
         gm.shapes.begin(ShapeType.Filled);
-        Art.goose(gm.shapes, 330, 400, 4f, false);
+        Art.enableBlend();
+        Art.shadow(gm.shapes, 394, 402, 100);
+        Art.goose(gm.shapes, 330, 400 + Art.bob(0f, 2f), 4f, false);
         for (int i = 0; i < previews.size(); i++) {
             float y = 300 - i * 70;
             Art.box(gm.shapes, 200, y - 50, 400, 60);
             if (i == cursor) {
-                gm.shapes.setColor(Color.YELLOW);
-                gm.shapes.rect(180, y - 30, 12, 12);
+                Art.cursor(gm.shapes, 176, y - 31, 14);
             }
         }
         gm.shapes.end();

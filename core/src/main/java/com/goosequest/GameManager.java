@@ -7,6 +7,7 @@ import com.goosequest.character.Goose;
 import com.goosequest.item.Bread;
 import com.goosequest.item.Inventory;
 import com.goosequest.state.GameState;
+import com.goosequest.util.Art;
 import com.goosequest.world.World;
 import com.goosequest.world.WorldBuilder;
 
@@ -64,6 +65,7 @@ public class GameManager {
     }
 
     public void update(float dt) {
+        Art.tick(dt);
         if (!states.isEmpty()) states.peek().update(dt);
     }
 

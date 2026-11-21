@@ -1,6 +1,7 @@
 package com.goosequest.world;
 
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.goosequest.util.Palette;
 import com.goosequest.world.tile.DoorTile;
 import com.goosequest.world.tile.FenceTile;
 import com.goosequest.world.tile.GrassTile;
@@ -128,7 +129,53 @@ public class TileMap {
                 tiles[x][y].draw(s, x * t, y * t, t);
             }
         }
-        for (GameObject o : objects) o.draw(s, t);
+        drawEdges(s, t);
+        // วาดของที่อยู่ไกล (y สูง) ก่อน ของที่อยู่ใกล้จะได้ทับถูกต้อง
+        List<GameObject> sorted = new ArrayList<>(objects);
+        sorted.sort((a, b) -> Integer.compare(b.getY(), a.getY()));
+        for (GameObject o : sorted) o.draw(s, t);
+    }
+
+    /**
+     * ขอบระหว่างพื้นต่างชนิด: ริมตลิ่งรอบน้ำ และขอบทางเดิน
+     * ทำที่นี่เพราะ Tile แต่ละช่องไม่รู้ว่าช่องข้าง ๆ เป็นอะไร
+     */
+    private void drawEdges(ShapeRenderer s, float t) {
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                Tile tile = tiles[x][y];
+                float px = x * t, py = y * t;
+                if (tile instanceof WaterTile) {
+                    for (Direction d : Direction.values()) {
+                        if (isWater(x + d.dx, y + d.dy)) continue;
+                        s.setColor(Palette.SHORE);
+                        edge(s, px, py, t, d, 4);
+                        s.setColor(Palette.WATER_LIGHT);
+                        edge(s, px + d.dx * -4, py + d.dy * -4, t, d, 1.5f);
+                    }
+                } else if (tile instanceof PathTile || tile instanceof DoorTile) {
+                    for (Direction d : Direction.values()) {
+                        if (!inBounds(x + d.dx, y + d.dy)) continue;
+                        Tile n = tiles[x + d.dx][y + d.dy];
+                        if (n instanceof PathTile || n instanceof DoorTile) continue;
+                        s.setColor(Palette.PATH_DARK);
+                        edge(s, px, py, t, d, 2);
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean isWater(int x, int y) {
+        return !inBounds(x, y) || tiles[x][y] instanceof WaterTile;
+    }
+
+    /** แถบหนา w pixel ชิดขอบช่องด้านทิศ d */
+    private static void edge(ShapeRenderer s, float px, float py, float t, Direction d, float w) {
+        if (d.dx > 0) s.rect(px + t - w, py, w, t);
+        else if (d.dx < 0) s.rect(px, py, w, t);
+        else if (d.dy > 0) s.rect(px, py + t - w, t, w);
+        else s.rect(px, py, t, w);
     }
 
     public void setPlayer(Player player) { this.player = player; }

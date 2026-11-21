@@ -7,6 +7,7 @@ import com.goosequest.GameManager;
 import com.goosequest.character.Goose;
 import com.goosequest.util.Art;
 import com.goosequest.util.Keys;
+import com.goosequest.util.Palette;
 import com.goosequest.world.Direction;
 import com.goosequest.world.GameObject;
 import com.goosequest.world.Interactable;
@@ -22,10 +23,12 @@ import com.goosequest.world.World;
  */
 public class ExploreState extends GameState {
     private static final float MOVE_DELAY = 0.14f; // วินาทีต่อการเดิน 1 ช่อง
+    private static final float FADE_TIME = 0.35f; // วินาทีที่จอค่อย ๆ สว่างหลังเปลี่ยนแผนที่
 
     private final World world;
     private final OrthographicCamera worldCam;
     private float moveTimer = 0f;
+    private float fade = 1f; // 1 = มืดสนิท, 0 = เห็นชัด
 
     public ExploreState(GameManager gm) {
         super(gm);
@@ -36,6 +39,7 @@ public class ExploreState extends GameState {
 
     @Override
     public void update(float dt) {
+        fade = Math.max(0f, fade - dt / FADE_TIME);
         TileMap map = world.getCurrentMap();
         map.update(dt);
 
@@ -94,6 +98,7 @@ public class ExploreState extends GameState {
 
     public void warp(String targetMap, String targetDoorId) {
         world.warp(targetMap, targetDoorId);
+        fade = 1f;
         moveTimer = MOVE_DELAY * 2; // กันเดินต่อทันทีหลังวาร์ป
     }
 
@@ -111,11 +116,21 @@ public class ExploreState extends GameState {
                 clampCam(p.getY() * t + t / 2, map.getHeight() * t, GameManager.VIEW_H), 0);
         worldCam.update();
 
+        Art.enableBlend();
         gm.shapes.setProjectionMatrix(worldCam.combined);
         gm.shapes.begin(ShapeType.Filled);
         map.draw(gm.shapes, t);
         p.draw(gm.shapes, t);
         gm.shapes.end();
+
+        if (fade > 0) {
+            Art.enableBlend();
+            gm.shapes.setProjectionMatrix(uiCam.combined);
+            gm.shapes.begin(ShapeType.Filled);
+            gm.shapes.setColor(0f, 0f, 0f, fade * fade);
+            gm.shapes.rect(0, 0, GameManager.VIEW_W, GameManager.VIEW_H);
+            gm.shapes.end();
+        }
 
         drawHud(map);
     }
@@ -131,9 +146,9 @@ public class ExploreState extends GameState {
         gm.shapes.begin(ShapeType.Filled);
         Art.box(gm.shapes, 8, GameManager.VIEW_H - 78, 230, 70);
         Art.bar(gm.shapes, 60, GameManager.VIEW_H - 46, 160, 10,
-                (float) hero.getHp() / hero.getMaxHp(), Color.RED);
+                (float) hero.getHp() / hero.getMaxHp(), Palette.HP);
         Art.bar(gm.shapes, 60, GameManager.VIEW_H - 66, 160, 10,
-                (float) hero.getMp() / hero.getMaxMp(), Color.SKY);
+                (float) hero.getMp() / hero.getMaxMp(), Palette.MP);
         gm.shapes.end();
 
         gm.batch.setProjectionMatrix(uiCam.combined);
