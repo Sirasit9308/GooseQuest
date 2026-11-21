@@ -1,0 +1,43 @@
+name: CI
+
+# รัน build และ test อัตโนมัติทุกครั้งที่ push เข้า main หรือเปิด/อัปเดต PR
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Gradle 8.14.x รันบน JDK 25 ไม่ได้ จึงใช้ JDK 21 (ตรงกับที่ README แนะนำ)
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # cache ไฟล์ Gradle และ libGDX ให้รอบถัดไปเร็วขึ้น
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build and run tests
+        run: ./gradlew build --console=plain
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: '**/build/reports/tests/'
+          if-no-files-found: ignore

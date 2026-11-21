@@ -15,4 +15,13 @@ subprojects {
     tasks.withType(JavaCompile).configureEach {
         options.encoding = 'UTF-8'
     }
+
+    // ใช้ JUnit 5 ในการรัน test (ถ้าไม่ตั้งไว้ Gradle จะข้าม test แบบ JUnit 5 ไปเงียบ ๆ)
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+        testLogging {
+            events 'failed'
+            exceptionFormat 'full'
+        }
+    }
 }
