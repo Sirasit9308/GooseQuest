@@ -11,6 +11,9 @@ import java.util.List;
  * Inheritance: Goose → Character
  */
 public abstract class Goose extends Character {
+    /** เลเวลที่ปลดล็อกสกิลที่ 2 ของทุกสาย (แก้ที่เดียวถ้าอยากเปลี่ยน) */
+    protected static final int SECOND_SKILL_LEVEL = 3;
+
     private final List<Skill> skills = new ArrayList<>();
     private int level = 1;
     private int exp = 0;
@@ -51,8 +54,12 @@ public abstract class Goose extends Character {
         while (exp >= expToNext()) {
             exp -= expToNext();
             level++;
+            int skillsBefore = skills.size();
             onLevelUp();
             msg.append(" LEVEL UP! Now Lv ").append(level).append("!");
+            for (int i = skillsBefore; i < skills.size(); i++) {
+                msg.append(" Learned ").append(skills.get(i).getName()).append("!");
+            }
         }
         return msg.toString();
     }

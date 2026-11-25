@@ -1,6 +1,7 @@
 package com.goosequest.character;
 
 import com.goosequest.skill.MegaHonk;
+import com.goosequest.skill.SoothingSong;
 
 /** [คนที่ 1] สายนักร้อง: MP เยอะ ร้องจนศัตรูมึน */
 public class HonkerGoose extends Goose {
@@ -11,6 +12,7 @@ public class HonkerGoose extends Goose {
     @Override
     protected void onLevelUp() {
         growStats(12, 6, 3, 1);
+        if (getLevel() == SECOND_SKILL_LEVEL) learnSkill(new SoothingSong());
     }
 
     @Override
