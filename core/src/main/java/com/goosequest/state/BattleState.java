@@ -31,6 +31,8 @@ public class BattleState extends GameState {
     private static final float EVENT_GAP = 0.4f;     // เว้นระยะระหว่างเหตุการณ์ในเทิร์นเดียวกัน
     private static final float SKIP_AFTER = 0.5f;    // รอเกินนี้แล้วกดข้ามได้
     private static final float FLOAT_RISE = 50f;
+    private static final float FLOAT_SCALE = 2.2f;   // ขนาดตัวเลขปกติ (ฟอนต์ปกติ = 1)
+    private static final float CRIT_SCALE = 3.4f;    // คริติคอลใหญ่กว่าและเป็นสีแดง
 
     /** เอฟเฟกต์หนึ่งอันที่กำลังเล่น: รอ delay ก่อนแล้วนับ age */
     private static final class Fx {
@@ -364,17 +366,21 @@ public class BattleState extends GameState {
             float y = baseY + t * FLOAT_RISE;
             float alpha = 1f - t;
             String text = fx.event.getLabel();
+            boolean crit = fx.event.isCritical();
 
+            gm.font.getData().setScale(crit ? CRIT_SCALE : FLOAT_SCALE);
+            float shadow = crit ? 4 : 3;
             gm.font.setColor(0f, 0f, 0f, alpha); // ขอบดำให้อ่านง่ายบนฉากสว่าง
-            gm.font.draw(gm.batch, text, x + 2, y - 2);
-            gm.font.setColor(floatColor(fx.event.getKind(), alpha));
+            gm.font.draw(gm.batch, text, x + shadow, y - shadow);
+            gm.font.setColor(floatColor(fx.event.getKind(), crit, alpha));
             gm.font.draw(gm.batch, text, x, y);
         }
+        gm.font.getData().setScale(1f);
     }
 
-    private Color floatColor(HitEvent.Kind kind, float alpha) {
+    private Color floatColor(HitEvent.Kind kind, boolean crit, float alpha) {
         return switch (kind) {
-            case DAMAGE -> new Color(1f, 1f, 1f, alpha);
+            case DAMAGE -> crit ? new Color(1f, 0.1f, 0.1f, alpha) : new Color(1f, 1f, 1f, alpha);
             case HEAL -> new Color(0.3f, 1f, 0.4f, alpha);
             case BUFF -> new Color(0.4f, 0.85f, 1f, alpha);
             case DEBUFF -> new Color(1f, 0.6f, 0.2f, alpha);
