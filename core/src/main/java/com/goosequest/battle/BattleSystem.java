@@ -70,6 +70,7 @@ public class BattleSystem {
         if (Dice.chance(0.6)) {
             log.add("You waddled away safely!");
             result = Result.FLED;
+            endBattle();
         } else {
             log.add("Couldn't escape!");
             enemyTurn();
@@ -147,11 +148,19 @@ public class BattleSystem {
         if (!hero.isAlive()) {
             result = Result.LOST;
             log.add(hero.getName() + " fainted...");
+            endBattle();
         }
+    }
+
+    /** จบการต่อสู้ (ชนะ แพ้ หนี) ล้างบัฟชั่วคราวของทั้งสองฝั่ง */
+    private void endBattle() {
+        hero.clearBuffs();
+        enemy.clearBuffs();
     }
 
     private void win() {
         result = Result.WON;
+        endBattle();
         log.add(enemy.getName() + " was defeated!");
         log.add(hero.gainExp(enemy.getExpReward()));
         Item drop = enemy.rollDrop();

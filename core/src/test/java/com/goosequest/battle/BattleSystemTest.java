@@ -91,6 +91,51 @@ class BattleSystemTest {
     }
 
     @Test
+    void tempDefBuffRecordsEventAndIsClearedWhenBattleIsWon() {
+        int baseDef = hero.getDef();
+        hero.learnSkill(skill((user, target) -> {
+            user.addBuff(0, 4);
+            target.takeDamage(10000); // ล้มศัตรูในเทิร์นเดียว
+            return "buffed and won";
+        }));
+        battle.useSkill(1);
+
+        assertEquals(BattleSystem.Result.WON, battle.getResult());
+        assertEquals(baseDef, hero.getDef());
+        boolean sawDefBuff = battle.drainEvents().stream()
+                .anyMatch(e -> e.getKind() == Kind.BUFF && "DEF +4".equals(e.getLabel()));
+        assertTrue(sawDefBuff);
+    }
+
+    @Test
+    void buffsAreClearedWhenHeroLoses() {
+        int baseAtk = hero.getAtk();
+        hero.addBuff(5, 0);
+        enemy.addBuff(5, 0);
+        hero.takeDamage(10000 + hero.getDef());
+        battle.attack(); // ห่านที่ล้มอยู่ยังตีได้ในเทสต์ ศัตรูตอบโต้แล้วเช็กผลแพ้
+
+        assertEquals(BattleSystem.Result.LOST, battle.getResult());
+        assertEquals(baseAtk, hero.getAtk());
+        assertEquals(1, enemy.getAtk()); // ATK เดิมของ Sponge
+    }
+
+    @Test
+    void buffsAreClearedWhenBattleEndsByFleeing() {
+        int baseAtk = hero.getAtk();
+        int baseDef = hero.getDef();
+        hero.addBuff(5, 5);
+        // หนีวนไปจนกว่าจะสำเร็จ (Sponge ตีเบามาก ห่านไม่ล้มก่อน)
+        for (int i = 0; i < 500 && battle.isOngoing(); i++) {
+            battle.flee();
+        }
+
+        assertEquals(BattleSystem.Result.FLED, battle.getResult());
+        assertEquals(baseAtk, hero.getAtk());
+        assertEquals(baseDef, hero.getDef());
+    }
+
+    @Test
     void stunRecordsStatusEventAndSkipsEnemyTurn() {
         hero.learnSkill(skill((user, target) -> {
             target.setStunned(true);
