@@ -14,7 +14,7 @@ public class SneakyPeck implements Skill {
     @Override
     public String use(Character user, Character target) {
         boolean crit = Dice.chance(0.4);
-        int dmg = target.takeDamage(Dice.vary(user.getAtk() * (crit ? 3 : 1)));
+        int dmg = target.takeDamage(Dice.vary(user.getAtk() * (crit ? 3 : 1)), crit);
         return user.getName() + " uses SNEAKY PECK! " + (crit ? "CRITICAL! " : "") + dmg + " damage!";
     }
 }

@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.goosequest.GameManager;
 import com.goosequest.battle.BattleSystem;
+import com.goosequest.battle.HitEvent;
 import com.goosequest.character.Character;
 import com.goosequest.character.Enemy;
 import com.goosequest.character.Goose;
@@ -14,15 +15,42 @@ import com.goosequest.util.Keys;
 import com.goosequest.util.Palette;
 import com.goosequest.world.MapEnemy;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * [คนที่ 1] หน้าจอต่อสู้: รับปุ่ม + วาดภาพ ส่วนกติกาอยู่ใน BattleSystem
  */
 public class BattleState extends GameState {
-    private enum Mode { COMMAND, SKILL, ITEM, END }
+    private enum Mode { COMMAND, SKILL, ITEM, ANIM, END }
 
     private static final String[] COMMANDS = {"Attack", "Skill", "Item", "Run"};
+
+    private static final float SHAKE_TIME = 0.3f;    // ตัวที่โดนตีสั่น/กระพริบ
+    private static final float FLOAT_TIME = 0.8f;    // ตัวเลขลอยขึ้นแล้วจาง
+    private static final float EVENT_GAP = 0.4f;     // เว้นระยะระหว่างเหตุการณ์ในเทิร์นเดียวกัน
+    private static final float SKIP_AFTER = 0.5f;    // รอเกินนี้แล้วกดข้ามได้
+    private static final float FLOAT_RISE = 50f;
+    private static final float FLOAT_SCALE = 2.2f;   // ขนาดตัวเลขปกติ (ฟอนต์ปกติ = 1)
+    private static final float CRIT_SCALE = 3.4f;    // คริติคอลใหญ่กว่าและเป็นสีแดง
+
+    /** เอฟเฟกต์หนึ่งอันที่กำลังเล่น: รอ delay ก่อนแล้วนับ age */
+    private static final class Fx {
+        final HitEvent event;
+        float delay;
+        float age;
+
+        Fx(HitEvent event, float delay) {
+            this.event = event;
+            this.delay = delay;
+        }
+
+        boolean started() { return delay <= 0; }
+    }
+
+    private final List<Fx> effects = new ArrayList<>();
+    private float animTimer;
+    private Mode afterAnim = Mode.COMMAND;
 
     private final ExploreState explore;
     private final MapEnemy mapEnemy;
@@ -39,14 +67,72 @@ public class BattleState extends GameState {
 
     @Override
     public void update(float dt) {
+        updateEffects(dt);
         switch (mode) {
             case COMMAND -> updateCommand();
             case SKILL -> updateSkill();
             case ITEM -> updateItem();
+            case ANIM -> updateAnim(dt);
             case END -> {
                 if (Keys.confirm()) finish();
             }
         }
+    }
+
+    // ---------- เอฟเฟกต์ ----------
+
+    /** ดึงเหตุการณ์จาก BattleSystem มาเข้าคิวเล่น ถ้ามีให้พักเมนูไว้ก่อนไปโหมด next */
+    private void beginAnim(Mode next) {
+        List<HitEvent> events = battle.drainEvents();
+        if (events.isEmpty()) {
+            mode = next;
+            return;
+        }
+        float delay = 0;
+        for (HitEvent e : events) {
+            effects.add(new Fx(e, delay));
+            delay += EVENT_GAP;
+        }
+        animTimer = 0;
+        afterAnim = next;
+        mode = Mode.ANIM;
+    }
+
+    /** เอฟเฟกต์เดินต่อแม้ผู้เล่นกดข้ามไปแล้ว */
+    private void updateEffects(float dt) {
+        for (Fx fx : effects) {
+            if (fx.started()) fx.age += dt;
+            else fx.delay -= dt;
+        }
+        effects.removeIf(fx -> fx.age >= FLOAT_TIME);
+    }
+
+    private void updateAnim(float dt) {
+        animTimer += dt;
+        boolean skip = animTimer >= SKIP_AFTER && Keys.confirm();
+        if (effects.isEmpty() || skip) mode = afterAnim;
+    }
+
+    /** ตัวที่โดนดาเมจกำลังสั่นอยู่ไหม คืนเวลาที่ผ่านไป (หรือ -1 ถ้าไม่สั่น) */
+    private float hitAge(boolean onHero) {
+        for (Fx fx : effects) {
+            if (fx.event.isOnHero() == onHero
+                    && fx.event.getKind() == HitEvent.Kind.DAMAGE
+                    && fx.started() && fx.age < SHAKE_TIME) {
+                return fx.age;
+            }
+        }
+        return -1f;
+    }
+
+    private float shakeOffset(float age) {
+        if (age < 0) return 0;
+        return (float) Math.sin(age * 70f) * 8f * (1f - age / SHAKE_TIME);
+    }
+
+    /** กระพริบ: ซ่อนตัวเป็นช่วง ๆ ระหว่างสั่น */
+    private boolean blinkHidden(float age) {
+        return age >= 0 && ((int) (age / 0.05f)) % 2 == 1;
     }
 
     private void updateCommand() {
@@ -68,7 +154,7 @@ public class BattleState extends GameState {
             }
             case 3 -> battle.flee();
         }
-        if (!battle.isOngoing()) mode = Mode.END;
+        beginAnim(battle.isOngoing() ? Mode.COMMAND : Mode.END);
     }
 
     private void updateSkill() {
@@ -84,7 +170,7 @@ public class BattleState extends GameState {
         if (Keys.confirm()) {
             // MP ไม่พอ → ไม่เสียเทิร์น อยู่ในเมนูสกิลต่อ
             if (!battle.useSkill(cursor)) return;
-            mode = battle.isOngoing() ? Mode.COMMAND : Mode.END;
+            beginAnim(battle.isOngoing() ? Mode.COMMAND : Mode.END);
             cursor = 0;
         }
     }
@@ -101,7 +187,7 @@ public class BattleState extends GameState {
         }
         if (Keys.confirm()) {
             battle.useItem(items.get(cursor));
-            mode = battle.isOngoing() ? Mode.COMMAND : Mode.END;
+            beginAnim(battle.isOngoing() ? Mode.COMMAND : Mode.END);
             cursor = 0;
         }
     }
@@ -130,13 +216,19 @@ public class BattleState extends GameState {
         gm.shapes.begin(ShapeType.Filled);
         drawBackground();
 
+        float enemyHit = hitAge(false);
+        float heroHit = hitAge(true);
         if (enemy.isAlive()) {
             Art.shadow(gm.shapes, 610, 414, 150);
-            Art.enemy(gm.shapes, enemy.getColor(), 540, 400 + Art.bob(1.3f, 3f), 140);
+            if (!blinkHidden(enemyHit)) {
+                Art.enemy(gm.shapes, enemy.getColor(), 540 + shakeOffset(enemyHit), 400 + Art.bob(1.3f, 3f), 140);
+            }
         }
         if (hero.isAlive()) {
             Art.shadow(gm.shapes, 200, 232, 150);
-            Art.goose(gm.shapes, 120, 230 + Art.bob(0f, 2f), 5f, false);
+            if (!blinkHidden(heroHit)) {
+                Art.goose(gm.shapes, 120 + shakeOffset(heroHit), 230 + Art.bob(0f, 2f), 5f, false);
+            }
         }
 
         statusPanel(enemy, 40, 470);
@@ -145,7 +237,7 @@ public class BattleState extends GameState {
         // กล่องข้อความ + เมนู
         Art.box(gm.shapes, 10, 10, 560, 180);
         Art.box(gm.shapes, 580, 10, 210, 180);
-        if (mode != Mode.END) {
+        if (mode != Mode.END && mode != Mode.ANIM) {
             Art.cursor(gm.shapes, 598, 150 - cursor * 30, 12);
         }
         gm.shapes.end();
@@ -254,10 +346,45 @@ public class BattleState extends GameState {
                 gm.font.setColor(i == cursor ? Color.YELLOW : Color.WHITE);
                 gm.font.draw(gm.batch, label, 620, 165 - row * 30);
             }
-        } else {
+        } else if (mode == Mode.END) {
             gm.font.setColor(Color.YELLOW);
             gm.font.draw(gm.batch, "ENTER to continue", 600, 100);
         }
+        drawFloatingText();
+        gm.font.setColor(Color.WHITE);
         gm.batch.end();
+    }
+
+    /** ตัวเลขดาเมจ/ฮีล/บัฟที่ลอยขึ้นเหนือตัวละครแล้วจางหาย (ต้องเรียกตอน batch เปิดอยู่) */
+    private void drawFloatingText() {
+        for (Fx fx : effects) {
+            if (!fx.started()) continue;
+            float t = fx.age / FLOAT_TIME;
+            float baseX = fx.event.isOnHero() ? 170 : 590;
+            float baseY = fx.event.isOnHero() ? 340 : 560;
+            float x = baseX;
+            float y = baseY + t * FLOAT_RISE;
+            float alpha = 1f - t;
+            String text = fx.event.getLabel();
+            boolean crit = fx.event.isCritical();
+
+            gm.font.getData().setScale(crit ? CRIT_SCALE : FLOAT_SCALE);
+            float shadow = crit ? 4 : 3;
+            gm.font.setColor(0f, 0f, 0f, alpha); // ขอบดำให้อ่านง่ายบนฉากสว่าง
+            gm.font.draw(gm.batch, text, x + shadow, y - shadow);
+            gm.font.setColor(floatColor(fx.event.getKind(), crit, alpha));
+            gm.font.draw(gm.batch, text, x, y);
+        }
+        gm.font.getData().setScale(1f);
+    }
+
+    private Color floatColor(HitEvent.Kind kind, boolean crit, float alpha) {
+        return switch (kind) {
+            case DAMAGE -> crit ? new Color(1f, 0.1f, 0.1f, alpha) : new Color(1f, 1f, 1f, alpha);
+            case HEAL -> new Color(0.3f, 1f, 0.4f, alpha);
+            case BUFF -> new Color(0.4f, 0.85f, 1f, alpha);
+            case DEBUFF -> new Color(1f, 0.6f, 0.2f, alpha);
+            case STATUS -> new Color(1f, 0.9f, 0.2f, alpha);
+        };
     }
 }

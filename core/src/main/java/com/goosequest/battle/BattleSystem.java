@@ -1,5 +1,6 @@
 package com.goosequest.battle;
 
+import com.goosequest.character.Character;
 import com.goosequest.character.Enemy;
 import com.goosequest.character.Goose;
 import com.goosequest.item.Inventory;
@@ -9,6 +10,7 @@ import com.goosequest.util.Dice;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * [คนที่ 1] กติกาการต่อสู้แบบผลัดตา (ไม่มีโค้ดวาดภาพเลย)
@@ -23,6 +25,7 @@ public class BattleSystem {
     private final Enemy enemy;
     private final Inventory inventory;
     private final List<String> log = new ArrayList<>();
+    private final List<HitEvent> events = new ArrayList<>();
     private Result result = Result.ONGOING;
 
     public BattleSystem(Goose hero, Enemy enemy, Inventory inventory) {
@@ -36,7 +39,7 @@ public class BattleSystem {
 
     public void attack() {
         if (!isOngoing()) return;
-        log.add(hero.attack(enemy));
+        log.add(track(() -> hero.attack(enemy)));
         finishPlayerTurn();
     }
 
@@ -47,14 +50,14 @@ public class BattleSystem {
             log.add("Not enough MP!");
             return false;
         }
-        log.add(hero.useSkill(index, enemy));
+        log.add(track(() -> hero.useSkill(index, enemy)));
         finishPlayerTurn();
         return true;
     }
 
     public void useItem(Item item) {
         if (!isOngoing() || !inventory.remove(item)) return;
-        log.add(item.use(hero));
+        log.add(track(() -> item.use(hero)));
         finishPlayerTurn();
     }
 
@@ -73,6 +76,57 @@ public class BattleSystem {
         }
     }
 
+    // ---------- เหตุการณ์สำหรับเอฟเฟกต์ ----------
+
+    /** สถานะที่เปรียบเทียบก่อน/หลังการกระทำ เพื่อรู้ว่าอะไรเปลี่ยนไป */
+    private record Snapshot(int hp, int atk, int def, boolean stunned) {
+        static Snapshot of(Character c) {
+            return new Snapshot(c.getHp(), c.getAtk(), c.getDef(), c.isStunned());
+        }
+    }
+
+    /**
+     * รันการกระทำแล้วบันทึกว่าตัวละครสองฝั่งเปลี่ยนอะไรไปบ้าง
+     * วิธีนี้ไม่ต้องให้ Skill / Item / Enemy ส่งตัวเลขกลับมาเอง สกิลใหม่ (เช่นบัฟ) จึงได้เอฟเฟกต์ทันที
+     */
+    private String track(Supplier<String> action) {
+        Snapshot heroBefore = Snapshot.of(hero);
+        Snapshot enemyBefore = Snapshot.of(enemy);
+        hero.consumeCritical();
+        enemy.consumeCritical();
+        String message = action.get();
+        diff(true, heroBefore, Snapshot.of(hero), hero.consumeCritical());
+        diff(false, enemyBefore, Snapshot.of(enemy), enemy.consumeCritical());
+        return message;
+    }
+
+    private void diff(boolean onHero, Snapshot before, Snapshot after, boolean critical) {
+        if (after.hp() < before.hp()) {
+            events.add(HitEvent.damage(onHero, before.hp() - after.hp(), critical));
+        } else if (after.hp() > before.hp()) {
+            events.add(HitEvent.heal(onHero, after.hp() - before.hp()));
+        }
+        statEvent(onHero, "ATK", after.atk() - before.atk());
+        statEvent(onHero, "DEF", after.def() - before.def());
+        if (!before.stunned() && after.stunned()) {
+            events.add(HitEvent.other(HitEvent.Kind.STATUS, onHero, "STUN"));
+        }
+    }
+
+    private void statEvent(boolean onHero, String stat, int change) {
+        if (change == 0) return;
+        HitEvent.Kind kind = change > 0 ? HitEvent.Kind.BUFF : HitEvent.Kind.DEBUFF;
+        String sign = change > 0 ? " +" : " ";
+        events.add(HitEvent.other(kind, onHero, stat + sign + change));
+    }
+
+    /** เหตุการณ์ที่เกิดขึ้นตั้งแต่ครั้งก่อนที่เรียก (เรียงตามลำดับเวลา) แล้วล้างทิ้ง */
+    public List<HitEvent> drainEvents() {
+        List<HitEvent> copy = new ArrayList<>(events);
+        events.clear();
+        return copy;
+    }
+
     // ---------- ภายใน ----------
 
     private void finishPlayerTurn() {
@@ -88,7 +142,7 @@ public class BattleSystem {
             enemy.setStunned(false);
             log.add(enemy.getName() + " is stunned and can't move!");
         } else {
-            log.add(enemy.takeTurn(hero));
+            log.add(track(() -> enemy.takeTurn(hero)));
         }
         if (!hero.isAlive()) {
             result = Result.LOST;
