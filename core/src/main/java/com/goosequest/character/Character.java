@@ -61,6 +61,12 @@ public abstract class Character {
         return true;
     }
 
+    /** ตั้ง HP/MP ตรง ๆ (ใช้ตอนโหลดเซฟ) ค่าจะถูกจำกัดให้อยู่ในช่วง 0..max เสมอ */
+    protected void setVitals(int newHp, int newMp) {
+        hp = Math.max(0, Math.min(maxHp, newHp));
+        mp = Math.max(0, Math.min(maxMp, newMp));
+    }
+
     public void buffAtk(int amount) {
         atk += amount;
     }
