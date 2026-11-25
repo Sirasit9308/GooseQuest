@@ -71,6 +71,82 @@ class GooseTest {
     }
 
     @Test
+    void secondSkillIsLearnedAtLevel3ForEveryClass() {
+        for (Goose g : new Goose[] {new WarriorGoose(), new HonkerGoose(), new NinjaGoose()}) {
+            g.gainExp(20); // Lv 2
+            assertEquals(2, g.getLevel());
+            assertEquals(1, g.getSkills().size(), g.getClassName());
+            g.gainExp(40); // Lv 3
+            assertEquals(3, g.getLevel());
+            assertEquals(2, g.getSkills().size(), g.getClassName());
+        }
+    }
+
+    @Test
+    void gainExpReportsLearnedSkillOnlyOnce() {
+        Goose g = new WarriorGoose();
+        assertFalse(g.gainExp(20).contains("Learned"));
+        String msg = g.gainExp(40);
+        assertTrue(msg.contains("Learned " + g.getSkills().get(1).getName() + "!"), msg);
+        assertFalse(g.gainExp(1).contains("Learned"));
+    }
+
+    @Test
+    void jumpingSeveralLevelsStillLearnsSecondSkillOnce() {
+        Goose g = new NinjaGoose();
+        String msg = g.gainExp(1000);
+        assertTrue(g.getLevel() > 3);
+        assertEquals(2, g.getSkills().size());
+        assertEquals(1, msg.split("Learned", -1).length - 1);
+    }
+
+    @Test
+    void restoreToLevel3LearnsSecondSkillWithoutDuplicates() {
+        Goose g = new HonkerGoose();
+        g.restore(5, 0, 1, 1);
+        assertEquals(2, g.getSkills().size());
+    }
+
+    @Test
+    void secondSkillsHaveDistinctNames() {
+        Goose[] geese = {new WarriorGoose(), new HonkerGoose(), new NinjaGoose()};
+        java.util.Set<String> names = new java.util.HashSet<>();
+        for (Goose g : geese) {
+            g.restore(3, 0, 1, 1);
+            for (Skill s : g.getSkills()) assertTrue(names.add(s.getName()), s.getName());
+        }
+    }
+
+    @Test
+    void shieldBashDamagesTarget() {
+        Goose g = new WarriorGoose();
+        Dummy d = new Dummy();
+        g.restore(3, 0, 1, g.getMaxMp());
+        g.useSkill(1, d);
+        assertTrue(d.getHp() < d.getMaxHp());
+    }
+
+    @Test
+    void soothingSongHealsUserWithoutHurtingTarget() {
+        Goose g = new HonkerGoose();
+        Dummy d = new Dummy();
+        g.restore(3, 0, 1, g.getMaxMp());
+        g.useSkill(1, d);
+        assertTrue(g.getHp() > 1);
+        assertEquals(d.getMaxHp(), d.getHp());
+    }
+
+    @Test
+    void shadowStrikeIgnoresDefense() {
+        Goose g = new NinjaGoose();
+        Character armored = new Character("Tank", 1000, 0, 1, 500) { };
+        g.restore(3, 0, 1, g.getMaxMp());
+        g.useSkill(1, armored);
+        // takeDamage ขั้นต่ำคือ 1 ถ้า DEF ยังกันได้ ดาเมจจะเท่ากับ 1 เท่านั้น
+        assertTrue(armored.getMaxHp() - armored.getHp() > 1);
+    }
+
+    @Test
     void restoreSetsLevelGrowsStatsAndKeepsValues() {
         Goose g = new WarriorGoose();
         int baseMaxHp = g.getMaxHp();
