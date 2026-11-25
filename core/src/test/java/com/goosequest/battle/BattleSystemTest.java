@@ -11,6 +11,7 @@ import com.goosequest.character.WarriorGoose;
 import com.goosequest.item.Bread;
 import com.goosequest.item.Inventory;
 import com.goosequest.skill.Skill;
+import com.goosequest.skill.WarCry;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

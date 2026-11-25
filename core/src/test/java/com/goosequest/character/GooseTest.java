@@ -118,12 +118,14 @@ class GooseTest {
     }
 
     @Test
-    void shieldBashDamagesTarget() {
+    void warCryDoublesUserAtkWithoutHurtingTarget() {
         Goose g = new WarriorGoose();
         Dummy d = new Dummy();
         g.restore(3, 0, 1, g.getMaxMp());
+        int baseAtk = g.getAtk();
         g.useSkill(1, d);
-        assertTrue(d.getHp() < d.getMaxHp());
+        assertEquals(baseAtk * 2, g.getAtk());
+        assertEquals(d.getMaxHp(), d.getHp());
     }
 
     @Test
