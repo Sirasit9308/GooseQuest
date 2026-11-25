@@ -149,7 +149,15 @@ public class BattleSystem {
             result = Result.LOST;
             log.add(hero.getName() + " fainted...");
             endBattle();
+        } else {
+            tickBuffs();
         }
+    }
+
+    /** จบหนึ่งรอบ (ผู้เล่น + ศัตรู): ลดเวลาบัฟแบบนับเทิร์น */
+    private void tickBuffs() {
+        if (!hero.tickBuffs().isEmpty()) log.add(hero.getName() + "'s buff wore off.");
+        if (!enemy.tickBuffs().isEmpty()) log.add(enemy.getName() + "'s buff wore off.");
     }
 
     /** จบการต่อสู้ (ชนะ แพ้ หนี) ล้างบัฟชั่วคราวของทั้งสองฝั่ง */

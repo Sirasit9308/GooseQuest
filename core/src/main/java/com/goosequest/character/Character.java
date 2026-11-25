@@ -2,6 +2,12 @@ package com.goosequest.character;
 
 import com.goosequest.util.Dice;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * [คนที่ 1] ตัวละครทุกตัวในเกม ทั้งห่านและศัตรู
  *
@@ -19,6 +25,7 @@ public abstract class Character {
     private int def;
     private int tempAtk;
     private int tempDef;
+    private final Map<String, TimedBuff> timedBuffs = new LinkedHashMap<>();
     private boolean stunned;
     private boolean lastHitCritical;
 
@@ -97,6 +104,64 @@ public abstract class Character {
     public void clearBuffs() {
         tempAtk = 0;
         tempDef = 0;
+        timedBuffs.clear();
+    }
+
+    /**
+     * บัฟแบบนับเทิร์น: ใช้ id เดิมซ้ำจะไม่ซ้อนกัน แต่แทนที่ของเดิมแล้วเริ่มนับใหม่
+     * นับเฉพาะเทิร์นหลังจากเทิร์นที่ใช้ (turns = 3 → มีผลต่ออีก 3 เทิร์นถัดไป)
+     * หมดเวลาโดย tickBuffs() ที่ BattleSystem เรียกตอนจบทุกรอบ
+     */
+    public void applyTimedBuff(String id, int atkAmount, int defAmount, int turns) {
+        // +1 เพราะรอบที่ใช้สกิลก็ถูก tick ด้วย แต่ไม่ถือเป็นหนึ่งในจำนวนเทิร์นที่ได้
+        timedBuffs.put(id, new TimedBuff(atkAmount, defAmount, turns + 1));
+    }
+
+    /** ยกเลิกบัฟแบบนับเทิร์นก่อนหมดเวลา คืน true ถ้ามีบัฟนั้นอยู่ */
+    public boolean removeTimedBuff(String id) {
+        return timedBuffs.remove(id) != null;
+    }
+
+    public boolean hasTimedBuff(String id) {
+        return timedBuffs.containsKey(id);
+    }
+
+    /** จบหนึ่งรอบ: ลดเวลาบัฟทุกอัน คืน id ของบัฟที่เพิ่งหมด */
+    public List<String> tickBuffs() {
+        List<String> expired = new ArrayList<>();
+        Iterator<Map.Entry<String, TimedBuff>> it = timedBuffs.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<String, TimedBuff> entry = it.next();
+            if (--entry.getValue().turnsLeft <= 0) {
+                expired.add(entry.getKey());
+                it.remove();
+            }
+        }
+        return expired;
+    }
+
+    private int timedAtk() {
+        int sum = 0;
+        for (TimedBuff b : timedBuffs.values()) sum += b.atk;
+        return sum;
+    }
+
+    private int timedDef() {
+        int sum = 0;
+        for (TimedBuff b : timedBuffs.values()) sum += b.def;
+        return sum;
+    }
+
+    private static final class TimedBuff {
+        final int atk;
+        final int def;
+        int turnsLeft;
+
+        TimedBuff(int atk, int def, int turnsLeft) {
+            this.atk = atk;
+            this.def = def;
+            this.turnsLeft = turnsLeft;
+        }
     }
 
     /** ให้คลาสลูกเพิ่มสถานะได้ตอนเลเวลอัป (protected = เฉพาะลูกหลาน) */
@@ -119,7 +184,7 @@ public abstract class Character {
     public int getMp() { return mp; }
     public int getMaxMp() { return maxMp; }
     /** ATK รวมบัฟชั่วคราว ถ้าต่ำกว่า 0 นับเป็น 0 */
-    public int getAtk() { return Math.max(0, atk + tempAtk); }
+    public int getAtk() { return Math.max(0, atk + tempAtk + timedAtk()); }
     /** DEF รวมบัฟชั่วคราว ถ้าต่ำกว่า 0 นับเป็น 0 */
-    public int getDef() { return Math.max(0, def + tempDef); }
+    public int getDef() { return Math.max(0, def + tempDef + timedDef()); }
 }
