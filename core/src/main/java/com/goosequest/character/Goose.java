@@ -2,25 +2,42 @@ package com.goosequest.character;
 
 import com.goosequest.skill.Skill;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * [คนที่ 1] ห่านของผู้เล่น (abstract) มี 3 สายอาชีพสืบทอดต่อ
  * Inheritance: Goose → Character
  */
 public abstract class Goose extends Character {
-    private final Skill skill;
+    private final List<Skill> skills = new ArrayList<>();
     private int level = 1;
     private int exp = 0;
 
-    protected Goose(String name, int maxHp, int maxMp, int atk, int def, Skill skill) {
+    protected Goose(String name, int maxHp, int maxMp, int atk, int def, Skill firstSkill) {
         super(name, maxHp, maxMp, atk, def);
-        this.skill = skill;
+        skills.add(firstSkill);
     }
 
-    public boolean canUseSkill() {
-        return getMp() >= skill.getMpCost();
+    /** เรียนสกิลใหม่ คืน false ถ้ามีสกิลนี้อยู่แล้ว (เทียบจากชื่อ) */
+    public boolean learnSkill(Skill skill) {
+        for (Skill s : skills) {
+            if (s.getName().equals(skill.getName())) return false;
+        }
+        skills.add(skill);
+        return true;
     }
 
-    public String useSkill(Character target) {
+    public boolean canUseSkill(int index) {
+        return index >= 0 && index < skills.size() && getMp() >= skills.get(index).getMpCost();
+    }
+
+    public String useSkill(int index, Character target) {
+        if (index < 0 || index >= skills.size()) {
+            return "No such skill!";
+        }
+        Skill skill = skills.get(index);
         if (!spendMp(skill.getMpCost())) {
             return "Not enough MP for " + skill.getName() + "!";
         }
@@ -40,6 +57,20 @@ public abstract class Goose extends Character {
         return msg.toString();
     }
 
+    /**
+     * คืนสถานะตอนโหลดเซฟ ควรเรียกกับห่านที่เพิ่งสร้าง (Lv 1)
+     * เลเวลที่เพิ่มจะเรียก onLevelUp() ทีละขั้น เพื่อให้สถานะและสกิลโตเท่าตอนเล่นจริง
+     * ส่วน exp, hp, mp ถูกจำกัดให้อยู่ในช่วงที่ถูกต้อง
+     */
+    public void restore(int savedLevel, int savedExp, int savedHp, int savedMp) {
+        while (level < savedLevel) {
+            level++;
+            onLevelUp();
+        }
+        exp = Math.max(0, Math.min(expToNext() - 1, savedExp));
+        setVitals(savedHp, savedMp);
+    }
+
     public int expToNext() { return level * 20; }
 
     /** แต่ละสายเก่งขึ้นไม่เหมือนกัน → คลาสลูกต้องกำหนดเอง */
@@ -48,7 +79,9 @@ public abstract class Goose extends Character {
     /** ชื่อสายอาชีพ ใช้แสดงในหน้าเลือกตัวละคร */
     public abstract String getClassName();
 
-    public Skill getSkill() { return skill; }
+    public List<Skill> getSkills() { return Collections.unmodifiableList(skills); }
+    /** สกิลแรก (สกิลเริ่มต้น) ไว้ให้หน้าจออื่นที่แสดงสกิลเดียวใช้ */
+    public Skill getSkill() { return skills.get(0); }
     public int getLevel() { return level; }
     public int getExp() { return exp; }
 }

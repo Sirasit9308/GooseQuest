@@ -41,13 +41,13 @@ public class BattleSystem {
     }
 
     /** คืน false ถ้า MP ไม่พอ (ไม่เสียเทิร์น) */
-    public boolean useSkill() {
+    public boolean useSkill(int index) {
         if (!isOngoing()) return false;
-        if (!hero.canUseSkill()) {
+        if (!hero.canUseSkill(index)) {
             log.add("Not enough MP!");
             return false;
         }
-        log.add(hero.useSkill(enemy));
+        log.add(hero.useSkill(index, enemy));
         finishPlayerTurn();
         return true;
     }

@@ -8,6 +8,7 @@ import com.goosequest.character.Character;
 import com.goosequest.character.Enemy;
 import com.goosequest.character.Goose;
 import com.goosequest.item.Item;
+import com.goosequest.skill.Skill;
 import com.goosequest.util.Art;
 import com.goosequest.util.Keys;
 import com.goosequest.util.Palette;
@@ -19,7 +20,7 @@ import java.util.List;
  * [คนที่ 1] หน้าจอต่อสู้: รับปุ่ม + วาดภาพ ส่วนกติกาอยู่ใน BattleSystem
  */
 public class BattleState extends GameState {
-    private enum Mode { COMMAND, ITEM, END }
+    private enum Mode { COMMAND, SKILL, ITEM, END }
 
     private static final String[] COMMANDS = {"Attack", "Skill", "Item", "Run"};
 
@@ -40,6 +41,7 @@ public class BattleState extends GameState {
     public void update(float dt) {
         switch (mode) {
             case COMMAND -> updateCommand();
+            case SKILL -> updateSkill();
             case ITEM -> updateItem();
             case END -> {
                 if (Keys.confirm()) finish();
@@ -54,7 +56,11 @@ public class BattleState extends GameState {
 
         switch (cursor) {
             case 0 -> battle.attack();
-            case 1 -> battle.useSkill();
+            case 1 -> {
+                mode = Mode.SKILL;
+                cursor = 0;
+                return;
+            }
             case 2 -> {
                 mode = Mode.ITEM;
                 cursor = 0;
@@ -63,6 +69,24 @@ public class BattleState extends GameState {
             case 3 -> battle.flee();
         }
         if (!battle.isOngoing()) mode = Mode.END;
+    }
+
+    private void updateSkill() {
+        List<Skill> skills = battle.getHero().getSkills();
+        int options = skills.size() + 1; // + "Back"
+        if (Keys.upJust()) cursor = (cursor + options - 1) % options;
+        if (Keys.downJust()) cursor = (cursor + 1) % options;
+        if (Keys.back() || (Keys.confirm() && cursor == skills.size())) {
+            mode = Mode.COMMAND;
+            cursor = 1;
+            return;
+        }
+        if (Keys.confirm()) {
+            // MP ไม่พอ → ไม่เสียเทิร์น อยู่ในเมนูสกิลต่อ
+            if (!battle.useSkill(cursor)) return;
+            mode = battle.isOngoing() ? Mode.COMMAND : Mode.END;
+            cursor = 0;
+        }
     }
 
     private void updateItem() {
@@ -204,9 +228,21 @@ public class BattleState extends GameState {
         if (mode == Mode.COMMAND) {
             for (int i = 0; i < COMMANDS.length; i++) {
                 String label = COMMANDS[i];
-                if (i == 1) label = hero.getSkill().getName() + " (" + hero.getSkill().getMpCost() + ")";
                 gm.font.setColor(i == cursor ? Color.YELLOW : Color.WHITE);
                 gm.font.draw(gm.batch, label, 620, 165 - i * 30);
+            }
+        } else if (mode == Mode.SKILL) {
+            List<Skill> skills = hero.getSkills();
+            // แสดงได้สูงสุด 5 บรรทัด เลื่อนตาม cursor
+            int first = Math.max(0, Math.min(cursor - 4, skills.size() + 1 - 5));
+            for (int row = 0; row < 5 && first + row <= skills.size(); row++) {
+                int i = first + row;
+                String label = i == skills.size()
+                        ? "Back"
+                        : skills.get(i).getName() + " (" + skills.get(i).getMpCost() + ")";
+                boolean usable = i == skills.size() || hero.canUseSkill(i);
+                gm.font.setColor(i == cursor ? Color.YELLOW : usable ? Color.WHITE : Color.GRAY);
+                gm.font.draw(gm.batch, label, 620, 165 - row * 30);
             }
         } else if (mode == Mode.ITEM) {
             List<Item> items = gm.getInventory().getItems();
