@@ -17,6 +17,8 @@ public abstract class Character {
     private int mp;
     private int atk;
     private int def;
+    private int tempAtk;
+    private int tempDef;
     private boolean stunned;
     private boolean lastHitCritical;
 
@@ -32,7 +34,7 @@ public abstract class Character {
 
     /** โจมตีปกติ ลูกหลาน override ได้ถ้าอยากให้ตีต่างออกไป (Polymorphism) */
     public String attack(Character target) {
-        int dmg = target.takeDamage(Dice.vary(atk));
+        int dmg = target.takeDamage(Dice.vary(getAtk()));
         return name + " attacks " + target.getName() + " for " + dmg + " damage!";
     }
 
@@ -43,7 +45,7 @@ public abstract class Character {
 
     /** เหมือนด้านบน แต่บอกได้ว่าโดนคริติคอล (ให้หน้าจอต่อสู้แสดงตัวเลขแบบพิเศษ) */
     public int takeDamage(int rawDamage, boolean critical) {
-        int dmg = Math.max(1, rawDamage - def);
+        int dmg = Math.max(1, rawDamage - getDef());
         hp = Math.max(0, hp - dmg);
         lastHitCritical = critical;
         return dmg;
@@ -81,8 +83,20 @@ public abstract class Character {
         mp = Math.max(0, Math.min(maxMp, newMp));
     }
 
+    /** บัฟถาวร (เช่น Golden Feather) ไม่ถูกล้างเมื่อจบการต่อสู้ */
     public void buffAtk(int amount) {
         atk += amount;
+    }
+
+    /** บัฟชั่วคราวจนจบการต่อสู้ รับค่าติดลบได้ (ดีบัฟ) ล้างด้วย clearBuffs() */
+    public void addBuff(int atkAmount, int defAmount) {
+        tempAtk += atkAmount;
+        tempDef += defAmount;
+    }
+
+    public void clearBuffs() {
+        tempAtk = 0;
+        tempDef = 0;
     }
 
     /** ให้คลาสลูกเพิ่มสถานะได้ตอนเลเวลอัป (protected = เฉพาะลูกหลาน) */
@@ -104,6 +118,8 @@ public abstract class Character {
     public int getMaxHp() { return maxHp; }
     public int getMp() { return mp; }
     public int getMaxMp() { return maxMp; }
-    public int getAtk() { return atk; }
-    public int getDef() { return def; }
+    /** ATK รวมบัฟชั่วคราว ถ้าต่ำกว่า 0 นับเป็น 0 */
+    public int getAtk() { return Math.max(0, atk + tempAtk); }
+    /** DEF รวมบัฟชั่วคราว ถ้าต่ำกว่า 0 นับเป็น 0 */
+    public int getDef() { return Math.max(0, def + tempDef); }
 }
