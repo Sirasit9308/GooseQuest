@@ -106,6 +106,28 @@ class BattleSystemTest {
     }
 
     @Test
+    void criticalHitIsFlaggedOnlyOnTheEventThatWasCritical() {
+        hero.learnSkill(skill((user, target) -> {
+            target.takeDamage(10, true);
+            return "crit";
+        }));
+        battle.useSkill(1);
+
+        List<HitEvent> events = battle.drainEvents();
+        assertTrue(events.get(0).isCritical());
+        assertFalse(events.get(0).isOnHero());
+        // ศัตรูตีกลับด้วยดาเมจธรรมดา ต้องไม่ติดคริจากครั้งก่อน
+        assertTrue(events.get(1).isOnHero());
+        assertFalse(events.get(1).isCritical());
+    }
+
+    @Test
+    void normalDamageIsNotCritical() {
+        battle.attack();
+        for (HitEvent e : battle.drainEvents()) assertFalse(e.isCritical());
+    }
+
+    @Test
     void drainEventsClearsTheList() {
         battle.attack();
         assertFalse(battle.drainEvents().isEmpty());

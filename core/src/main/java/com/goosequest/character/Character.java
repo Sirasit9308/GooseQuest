@@ -18,6 +18,7 @@ public abstract class Character {
     private int atk;
     private int def;
     private boolean stunned;
+    private boolean lastHitCritical;
 
     protected Character(String name, int maxHp, int maxMp, int atk, int def) {
         this.name = name;
@@ -37,9 +38,22 @@ public abstract class Character {
 
     /** รับดาเมจหลังหักพลังป้องกัน คืนค่าดาเมจที่โดนจริง */
     public int takeDamage(int rawDamage) {
+        return takeDamage(rawDamage, false);
+    }
+
+    /** เหมือนด้านบน แต่บอกได้ว่าโดนคริติคอล (ให้หน้าจอต่อสู้แสดงตัวเลขแบบพิเศษ) */
+    public int takeDamage(int rawDamage, boolean critical) {
         int dmg = Math.max(1, rawDamage - def);
         hp = Math.max(0, hp - dmg);
+        lastHitCritical = critical;
         return dmg;
+    }
+
+    /** ครั้งล่าสุดที่โดนดาเมจเป็นคริติคอลไหม อ่านแล้วล้างค่าทิ้ง */
+    public boolean consumeCritical() {
+        boolean was = lastHitCritical;
+        lastHitCritical = false;
+        return was;
     }
 
     /** ฟื้น HP คืนค่าที่ฟื้นได้จริง */

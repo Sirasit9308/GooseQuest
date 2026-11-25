@@ -92,15 +92,17 @@ public class BattleSystem {
     private String track(Supplier<String> action) {
         Snapshot heroBefore = Snapshot.of(hero);
         Snapshot enemyBefore = Snapshot.of(enemy);
+        hero.consumeCritical();
+        enemy.consumeCritical();
         String message = action.get();
-        diff(true, heroBefore, Snapshot.of(hero));
-        diff(false, enemyBefore, Snapshot.of(enemy));
+        diff(true, heroBefore, Snapshot.of(hero), hero.consumeCritical());
+        diff(false, enemyBefore, Snapshot.of(enemy), enemy.consumeCritical());
         return message;
     }
 
-    private void diff(boolean onHero, Snapshot before, Snapshot after) {
+    private void diff(boolean onHero, Snapshot before, Snapshot after, boolean critical) {
         if (after.hp() < before.hp()) {
-            events.add(HitEvent.damage(onHero, before.hp() - after.hp()));
+            events.add(HitEvent.damage(onHero, before.hp() - after.hp(), critical));
         } else if (after.hp() > before.hp()) {
             events.add(HitEvent.heal(onHero, after.hp() - before.hp()));
         }

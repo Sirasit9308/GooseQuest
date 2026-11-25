@@ -14,6 +14,7 @@ public final class HitEvent {
     private final boolean onHero;
     private final int amount;
     private final String label;
+    private boolean critical;
 
     private HitEvent(Kind kind, boolean onHero, int amount, String label) {
         this.kind = kind;
@@ -23,7 +24,13 @@ public final class HitEvent {
     }
 
     public static HitEvent damage(boolean onHero, int amount) {
-        return new HitEvent(Kind.DAMAGE, onHero, amount, String.valueOf(amount));
+        return damage(onHero, amount, false);
+    }
+
+    public static HitEvent damage(boolean onHero, int amount, boolean critical) {
+        HitEvent e = new HitEvent(Kind.DAMAGE, onHero, amount, String.valueOf(amount));
+        e.critical = critical;
+        return e;
     }
 
     public static HitEvent heal(boolean onHero, int amount) {
@@ -35,6 +42,8 @@ public final class HitEvent {
         return new HitEvent(kind, onHero, 0, label);
     }
 
+    /** ดาเมจนี้เป็นคริติคอลไหม (ใช้กับ DAMAGE เท่านั้น) */
+    public boolean isCritical() { return critical; }
     public Kind getKind() { return kind; }
     /** true = เกิดกับห่านของผู้เล่น, false = เกิดกับศัตรู */
     public boolean isOnHero() { return onHero; }
