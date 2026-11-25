@@ -21,13 +21,14 @@
      | `feature/` | เพิ่มของใหม่ตาม ticket | `feature/GQ-02-skill-list` |
      | `fix/` | แก้บั๊ก | `fix/GQ-91-door-warp-crash` |
      | `chore/` | งานที่ไม่ใช่ตัวเกม เช่น build, README, UML | `chore/GQ-32-uml-diagram` |
-   - ถ้างานไม่มีเลข ticket ให้ละส่วน `GQ-<เลข>` ไป เช่น `feature/graphics-quick-wins`
-     และบอกคนในทีมให้เปิด ticket ให้
+   - ถ้ามีการเปลี่ยนแปลงที่ไม่ได้อยู่ใน ticket ใด ให้ใช้คำว่า `extra` แทนเลข ticket
+     เช่น `feature/GQ-extra-free-movement` และขึ้นต้นข้อความ commit ด้วย `GQ-extra:`
+     ใช้เฉพาะงานที่ไม่อยู่ใน ticket จริง ๆ ถ้างานตรงกับ ticket ไหนให้ใช้เลข ticket นั้น
 5. **ถ้าไม่รู้ว่างานนี้เป็น ticket ไหน ให้ถามก่อนสร้าง branch** อย่าเดาเลข ticket
 
 ## กติกา commit
 
-- ข้อความ commit ขึ้นต้นด้วยเลข ticket: `GQ-12: add SaveManager`
+- ข้อความ commit ขึ้นต้นด้วยเลข ticket: `GQ-12: add SaveManager` (งานนอก ticket ใช้ `GQ-extra:`)
 - 1 commit = 1 เรื่อง ถ้าใน branch มีการแก้หลายเรื่อง ให้แยก commit
 - รัน `gradlew.bat build` (Windows) หรือ `./gradlew build` ให้ผ่านก่อน commit
 - อย่า commit ไฟล์ใน `.gitignore` (`build/`, `.gradle/`, `.idea/` ฯลฯ) หรือไฟล์เซฟ `save.json`

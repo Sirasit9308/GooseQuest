@@ -13,7 +13,8 @@ public final class Keys {
     public static boolean confirm() { return just(Input.Keys.ENTER) || just(Input.Keys.SPACE) || just(Input.Keys.Z); }
     public static boolean back()    { return just(Input.Keys.ESCAPE) || just(Input.Keys.X); }
     public static boolean menu()    { return just(Input.Keys.I) || just(Input.Keys.ESCAPE); }
-    public static boolean upJust()  { return just(Input.Keys.UP) || just(Input.Keys.W); }
+    public static boolean interact(){ return just(Input.Keys.F); }
+    public static boolean upJust() { return just(Input.Keys.UP) || just(Input.Keys.W); }
     public static boolean downJust(){ return just(Input.Keys.DOWN) || just(Input.Keys.S); }
 
     public static boolean upHeld()    { return held(Input.Keys.UP) || held(Input.Keys.W); }

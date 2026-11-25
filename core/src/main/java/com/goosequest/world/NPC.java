@@ -23,6 +23,10 @@ public class NPC extends Entity implements Interactable {
         state.showDialogue(name, lines);
     }
 
+    /** NPC ไม่คุยเองตอนเดินชน ต้องกด F ตอนอยู่ใกล้ ๆ */
+    @Override
+    public boolean needsKey() { return true; }
+
     @Override
     public void draw(ShapeRenderer s, float t) {
         float px = x * t;

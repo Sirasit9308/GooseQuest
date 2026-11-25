@@ -107,6 +107,60 @@ public class TileMap {
         return player == null || player.getX() != x || player.getY() != y;
     }
 
+    /**
+     * hitbox (กึ่งกลาง cx,cy ครึ่งกว้าง hx ครึ่งสูง hy หน่วยช่อง) ยืนตรงนี้ได้ไหม
+     * วัตถุที่ hitbox ทับอยู่แล้วที่ตำแหน่งเดิม (oldCx, oldCy) จะไม่นับ กันห่านติดค้างเวลามีของเดินมาทับ
+     */
+    public boolean canStand(float cx, float cy, float hx, float hy, float oldCx, float oldCy) {
+        int x0 = (int) Math.floor(cx - hx), x1 = (int) Math.floor(cx + hx);
+        int y0 = (int) Math.floor(cy - hy), y1 = (int) Math.floor(cy + hy);
+        for (int x = x0; x <= x1; x++) {
+            for (int y = y0; y <= y1; y++) {
+                if (!inBounds(x, y) || !tiles[x][y].isWalkable()) return false;
+            }
+        }
+        for (GameObject o : objects) {
+            if (!o.isSolid()) continue;
+            if (overlaps(o, cx, cy, hx, hy) && !overlaps(o, oldCx, oldCy, hx, hy)) return false;
+        }
+        return true;
+    }
+
+    /** hitbox ทับช่องของวัตถุ o ไหม */
+    private static boolean overlaps(GameObject o, float cx, float cy, float hx, float hy) {
+        return cx + hx > o.getX() && cx - hx < o.getX() + 1
+                && cy + hy > o.getY() && cy - hy < o.getY() + 1;
+    }
+
+    /** วัตถุที่ทำงานเมื่อสัมผัส (ศัตรู, ไอเทม) และห่านแตะอยู่ (ขยาย hitbox ออก margin ช่อง) หรือ null */
+    public GameObject findTouching(Player p, float margin) {
+        for (GameObject o : objects) {
+            if (o instanceof Interactable i && !i.needsKey()
+                    && overlaps(o, p.getHitCenterX(), p.getHitCenterY(),
+                            Player.HIT_HX + margin, Player.HIT_HY + margin)) {
+                return o;
+            }
+        }
+        return null;
+    }
+
+    /** วัตถุที่ต้องกด F (เช่น NPC) ที่อยู่ใกล้ห่านที่สุดในระยะ range ช่อง หรือ null */
+    public GameObject findNearbyKeyTarget(Player p, float range) {
+        GameObject best = null;
+        float bestDist = range * range;
+        for (GameObject o : objects) {
+            if (!(o instanceof Interactable i) || !i.needsKey()) continue;
+            float dx = o.getCenterX() - p.getHitCenterX();
+            float dy = o.getCenterY() - p.getHitCenterY();
+            float d2 = dx * dx + dy * dy;
+            if (d2 <= bestDist) {
+                bestDist = d2;
+                best = o;
+            }
+        }
+        return best;
+    }
+
     /** หาตำแหน่งประตูจาก id คืน {x, y} */
     public int[] findDoor(String doorId) {
         for (int x = 0; x < width; x++) {
@@ -131,8 +185,10 @@ public class TileMap {
         }
         drawEdges(s, t);
         // วาดของที่อยู่ไกล (y สูง) ก่อน ของที่อยู่ใกล้จะได้ทับถูกต้อง
+        // ห่านอยู่ในลำดับเดียวกับวัตถุอื่น เดินอ้อมหลัง NPC แล้วจะถูกบังถูกต้อง
         List<GameObject> sorted = new ArrayList<>(objects);
-        sorted.sort((a, b) -> Integer.compare(b.getY(), a.getY()));
+        if (player != null) sorted.add(player);
+        sorted.sort((a, b) -> Float.compare(b.getDrawY(), a.getDrawY()));
         for (GameObject o : sorted) o.draw(s, t);
     }
 
