@@ -135,6 +135,71 @@ class BattleSystemRulesTest {
         assertTrue(battle.getRecentLog(1).get(0).contains("can't run"));
     }
 
+    /** วนหนีจนสำเร็จ (โอกาสหนี 60% ต่อครั้ง) ศัตรูอ่อนมากจะได้ไม่ฆ่าห่านระหว่างรอ */
+    private static void fleeUntilEscaped(BattleSystem battle) {
+        for (int i = 0; i < 500 && battle.isOngoing(); i++) battle.flee();
+        assertEquals(BattleSystem.Result.FLED, battle.getResult());
+    }
+
+    @Test
+    void fleeingRestoresEnemyHpAndClearsItsStatus() {
+        Enemy enemy = new TestEnemy(1000, 1, 0, 0);
+        BattleSystem battle = fight(enemy);
+        enemy.takeDamage(enemy.getDef() + 600);
+        enemy.setStunned(true);
+        enemy.addBuff(5, 5);
+        enemy.applyTimedBuff("test", 3, 3, 5);
+        int atk = enemy.getAtk() - 5 - 3;
+        int def = enemy.getDef() - 5 - 3;
+
+        fleeUntilEscaped(battle);
+
+        assertEquals(enemy.getMaxHp(), enemy.getHp());
+        assertFalse(enemy.isStunned());
+        assertFalse(enemy.hasTimedBuff("test"));
+        assertEquals(atk, enemy.getAtk());
+        assertEquals(def, enemy.getDef());
+    }
+
+    @Test
+    void fleeingLeavesHeroHpDamaged() {
+        Enemy enemy = new TestEnemy(1000, 10, 0, 0);
+        BattleSystem battle = fight(enemy);
+        hero.takeDamage(hero.getDef() + 20);
+        int heroHp = hero.getHp();
+
+        fleeUntilEscaped(battle);
+
+        assertTrue(hero.getHp() <= heroHp); // ไม่ฟื้น (ถ้าหนีพลาดก็ยิ่งโดนตี)
+        assertTrue(hero.getHp() < hero.getMaxHp());
+    }
+
+    @Test
+    void winningDoesNotResetTheEnemy() {
+        Enemy enemy = new TestEnemy(1, 1, 0, 0);
+        BattleSystem battle = fight(enemy);
+        battle.attack();
+        assertEquals(BattleSystem.Result.WON, battle.getResult());
+        assertEquals(0, enemy.getHp());
+    }
+
+    @Test
+    void resettingTheBossRemovesEnragedBonus() {
+        FarmerBoss boss = new FarmerBoss();
+        int atk = boss.getAtk();
+        boss.takeDamage(boss.getDef() + boss.getMaxHp() / 2 + 10);
+        boss.takeTurn(hero); // โกรธ: ATK +6
+        assertEquals(atk + 6, boss.getAtk());
+
+        boss.resetAfterFlee();
+
+        assertEquals(atk, boss.getAtk());
+        assertEquals(boss.getMaxHp(), boss.getHp());
+        boss.takeDamage(boss.getDef() + boss.getMaxHp() / 2 + 10);
+        boss.takeTurn(hero); // โกรธได้อีกครั้ง
+        assertEquals(atk + 6, boss.getAtk());
+    }
+
     @Test
     void useItemNotInInventoryDoesNothing() {
         BattleSystem battle = fight(new TestEnemy(1000, 50, 0, 0));
