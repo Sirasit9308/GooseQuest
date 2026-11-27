@@ -129,12 +129,13 @@ class GooseTest {
     }
 
     @Test
-    void soothingSongHealsUserWithoutHurtingTarget() {
+    void intimidateDebuffsTargetWithoutHurtingIt() {
         Goose g = new HonkGoose();
         Dummy d = new Dummy();
         g.restore(3, 0, 1, g.getMaxMp());
         g.useSkill(1, d);
-        assertTrue(g.getHp() > 1);
+        assertTrue(d.hasStatus(StatusEffect.WEAKNESS));
+        assertTrue(d.hasStatus(StatusEffect.VULNERABLE));
         assertEquals(d.getMaxHp(), d.getHp());
     }
 
