@@ -22,14 +22,14 @@ class GooseTest {
 
     @Test
     void startsWithOneSkill() {
-        Goose g = new WarriorGoose();
+        Goose g = new SwordmanGoose();
         assertEquals(1, g.getSkills().size());
         assertSame(g.getSkills().get(0), g.getSkill());
     }
 
     @Test
     void learnSkillAddsNewAndRejectsDuplicate() {
-        Goose g = new WarriorGoose();
+        Goose g = new SwordmanGoose();
         assertTrue(g.learnSkill(skill("Honk Blast", 5)));
         assertFalse(g.learnSkill(skill("Honk Blast", 5)));
         assertEquals(2, g.getSkills().size());
@@ -37,13 +37,13 @@ class GooseTest {
 
     @Test
     void getSkillsIsReadOnly() {
-        Goose g = new WarriorGoose();
+        Goose g = new SwordmanGoose();
         assertThrows(UnsupportedOperationException.class, () -> g.getSkills().add(skill("X", 1)));
     }
 
     @Test
     void useSkillSpendsMpOfChosenSkill() {
-        Goose g = new WarriorGoose();
+        Goose g = new SwordmanGoose();
         g.learnSkill(skill("Cheap", 2));
         int mp = g.getMp();
         assertEquals("Cheap used", g.useSkill(1, new Dummy()));
@@ -52,7 +52,7 @@ class GooseTest {
 
     @Test
     void useSkillWithoutEnoughMpKeepsMp() {
-        Goose g = new WarriorGoose();
+        Goose g = new SwordmanGoose();
         g.learnSkill(skill("Pricey", g.getMaxMp() + 1));
         int mp = g.getMp();
         assertFalse(g.canUseSkill(1));
@@ -62,7 +62,7 @@ class GooseTest {
 
     @Test
     void useSkillWithBadIndexDoesNothing() {
-        Goose g = new WarriorGoose();
+        Goose g = new SwordmanGoose();
         int mp = g.getMp();
         assertEquals("No such skill!", g.useSkill(5, new Dummy()));
         assertEquals("No such skill!", g.useSkill(-1, new Dummy()));
@@ -72,7 +72,7 @@ class GooseTest {
 
     @Test
     void secondSkillIsLearnedAtLevel3ForEveryClass() {
-        for (Goose g : new Goose[] {new WarriorGoose(), new HonkerGoose(), new NinjaGoose()}) {
+        for (Goose g : new Goose[] {new SwordmanGoose(), new HonkGoose(), new ThiefGoose()}) {
             g.gainExp(20); // Lv 2
             assertEquals(2, g.getLevel());
             assertEquals(1, g.getSkills().size(), g.getClassName());
@@ -84,7 +84,7 @@ class GooseTest {
 
     @Test
     void gainExpReportsLearnedSkillOnlyOnce() {
-        Goose g = new WarriorGoose();
+        Goose g = new SwordmanGoose();
         assertFalse(g.gainExp(20).contains("Learned"));
         String msg = g.gainExp(40);
         assertTrue(msg.contains("Learned " + g.getSkills().get(1).getName() + "!"), msg);
@@ -93,7 +93,7 @@ class GooseTest {
 
     @Test
     void jumpingSeveralLevelsStillLearnsSecondSkillOnce() {
-        Goose g = new NinjaGoose();
+        Goose g = new ThiefGoose();
         String msg = g.gainExp(1000);
         assertTrue(g.getLevel() > 3);
         assertEquals(2, g.getSkills().size());
@@ -102,14 +102,14 @@ class GooseTest {
 
     @Test
     void restoreToLevel3LearnsSecondSkillWithoutDuplicates() {
-        Goose g = new HonkerGoose();
+        Goose g = new HonkGoose();
         g.restore(5, 0, 1, 1);
         assertEquals(2, g.getSkills().size());
     }
 
     @Test
     void secondSkillsHaveDistinctNames() {
-        Goose[] geese = {new WarriorGoose(), new HonkerGoose(), new NinjaGoose()};
+        Goose[] geese = {new SwordmanGoose(), new HonkGoose(), new ThiefGoose()};
         java.util.Set<String> names = new java.util.HashSet<>();
         for (Goose g : geese) {
             g.restore(3, 0, 1, 1);
@@ -118,19 +118,19 @@ class GooseTest {
     }
 
     @Test
-    void warCryDoublesUserAtkWithoutHurtingTarget() {
-        Goose g = new WarriorGoose();
+    void warCryRaisesUserAtkByHalfWithoutHurtingTarget() {
+        Goose g = new SwordmanGoose();
         Dummy d = new Dummy();
         g.restore(3, 0, 1, g.getMaxMp());
         int baseAtk = g.getAtk();
         g.useSkill(1, d);
-        assertEquals(baseAtk * 2, g.getAtk());
+        assertEquals(baseAtk + baseAtk / 2, g.getAtk());
         assertEquals(d.getMaxHp(), d.getHp());
     }
 
     @Test
     void soothingSongHealsUserWithoutHurtingTarget() {
-        Goose g = new HonkerGoose();
+        Goose g = new HonkGoose();
         Dummy d = new Dummy();
         g.restore(3, 0, 1, g.getMaxMp());
         g.useSkill(1, d);
@@ -140,7 +140,7 @@ class GooseTest {
 
     @Test
     void shadowStrikeIgnoresDefense() {
-        Goose g = new NinjaGoose();
+        Goose g = new ThiefGoose();
         Character armored = new Character("Tank", 1000, 0, 1, 500) { };
         g.restore(3, 0, 1, g.getMaxMp());
         g.useSkill(1, armored);
@@ -150,7 +150,7 @@ class GooseTest {
 
     @Test
     void restoreSetsLevelGrowsStatsAndKeepsValues() {
-        Goose g = new WarriorGoose();
+        Goose g = new SwordmanGoose();
         int baseMaxHp = g.getMaxHp();
         g.restore(3, 10, 50, 7);
         assertEquals(3, g.getLevel());
@@ -162,7 +162,7 @@ class GooseTest {
 
     @Test
     void restoreClampsTooLargeValues() {
-        Goose g = new WarriorGoose();
+        Goose g = new SwordmanGoose();
         g.restore(2, 9999, 9999, 9999);
         assertEquals(g.expToNext() - 1, g.getExp());
         assertEquals(g.getMaxHp(), g.getHp());
@@ -171,7 +171,7 @@ class GooseTest {
 
     @Test
     void restoreClampsNegativeValues() {
-        Goose g = new WarriorGoose();
+        Goose g = new SwordmanGoose();
         g.restore(1, -5, -10, -3);
         assertEquals(0, g.getExp());
         assertEquals(0, g.getHp());
@@ -180,7 +180,7 @@ class GooseTest {
 
     @Test
     void restoreIgnoresLevelBelowCurrent() {
-        Goose g = new WarriorGoose();
+        Goose g = new SwordmanGoose();
         g.restore(0, 0, 1, 1);
         assertEquals(1, g.getLevel());
     }

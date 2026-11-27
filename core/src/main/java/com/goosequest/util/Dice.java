@@ -8,10 +8,18 @@ public final class Dice {
 
     private Dice() {}
 
-    /** สุ่มค่าให้แกว่ง ±20% จากค่าฐาน เช่น 10 → 8..12 */
+    /**
+     * กฎปัดเศษของเกม: ปัดลงเสมอ แต่ไม่ต่ำกว่า 1 (0.9 → 1, 1.5 → 1, 26.9 → 26)
+     * ใช้กับดาเมจและบัฟทุกที่ที่คำนวณแล้วได้เลขไม่ลงตัว
+     */
+    public static int floorMin1(double value) {
+        return Math.max(1, (int) Math.floor(value));
+    }
+
+    /** สุ่มค่าให้แกว่ง ±20% จากค่าฐาน เช่น 10 → 8..12 (ปัดลงตามกฎ floorMin1) */
     public static int vary(int base) {
         double factor = 0.8 + random.nextDouble() * 0.4;
-        return Math.max(1, (int) Math.round(base * factor));
+        return floorMin1(base * factor);
     }
 
     /** คืน true ด้วยความน่าจะเป็น p (0.0 - 1.0) */

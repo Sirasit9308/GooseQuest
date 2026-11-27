@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.badlogic.gdx.graphics.Color;
 import com.goosequest.battle.BattleSystem;
 import com.goosequest.character.Enemy;
-import com.goosequest.character.WarriorGoose;
+import com.goosequest.character.SwordmanGoose;
 import com.goosequest.item.Inventory;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +16,7 @@ class WarCryTest {
         @Override public Color getColor() { return Color.WHITE; }
     }
 
-    private final WarriorGoose hero = new WarriorGoose();
+    private final SwordmanGoose hero = new SwordmanGoose();
     private final BattleSystem battle = new BattleSystem(hero, new Sponge(), new Inventory());
     private final int base = hero.getAtk();
 
@@ -25,18 +25,18 @@ class WarCryTest {
     }
 
     @Test
-    void doublesAtkImmediately() {
+    void raisesAtkByHalfImmediately() {
         battle.useSkill(1);
-        assertEquals(base * 2, hero.getAtk());
+        assertEquals(base + base / 2, hero.getAtk());
     }
 
     @Test
     void lastsThreeTurnsNotCountingTheTurnUsed() {
         battle.useSkill(1);
         battle.attack(); // เทิร์นที่ 1
-        assertEquals(base * 2, hero.getAtk());
+        assertEquals(base + base / 2, hero.getAtk());
         battle.attack(); // เทิร์นที่ 2
-        assertEquals(base * 2, hero.getAtk());
+        assertEquals(base + base / 2, hero.getAtk());
         battle.attack(); // เทิร์นที่ 3 ยังได้ ATK x2 ตอนตี แล้วบัฟหมดหลังจบเทิร์น
         assertEquals(base, hero.getAtk());
     }
@@ -47,11 +47,11 @@ class WarCryTest {
         battle.attack();
         battle.attack(); // เหลือเทิร์นสุดท้าย
         battle.useSkill(1); // ใช้ซ้ำ
-        assertEquals(base * 2, hero.getAtk()); // ไม่ซ้อนเป็น x3
+        assertEquals(base + base / 2, hero.getAtk()); // ไม่ซ้อนเป็น x3
 
         battle.attack();
         battle.attack();
-        assertEquals(base * 2, hero.getAtk()); // นับใหม่: ยังอยู่หลังผ่านไป 2 เทิร์น
+        assertEquals(base + base / 2, hero.getAtk()); // นับใหม่: ยังอยู่หลังผ่านไป 2 เทิร์น
         battle.attack();
         assertEquals(base, hero.getAtk());
     }
@@ -65,8 +65,8 @@ class WarCryTest {
     }
 
     @Test
-    void warriorLearnsWarCryAtLevelThree() {
-        WarriorGoose fresh = new WarriorGoose();
+    void swordmanLearnsWarCryAtLevelThree() {
+        SwordmanGoose fresh = new SwordmanGoose();
         while (fresh.getLevel() < 3) fresh.gainExp(1000);
         assertTrue(fresh.getSkills().stream().anyMatch(s -> s instanceof WarCry));
     }

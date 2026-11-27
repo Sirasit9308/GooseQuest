@@ -39,10 +39,33 @@ public abstract class Character {
         this.def = def;
     }
 
+    /** ตัวคูณดาเมจตอนคริติคอล (150% = แรงขึ้นจากเดิม 50%) */
+    public static final double CRIT_MULTIPLIER = 1.5;
+
+    /** โอกาสคริติคอลของตัวละคร ค่าเริ่มต้นคือไม่มี (ศัตรูไม่คริ) ห่านจะ override */
+    public double getCritChance() { return 0; }
+
     /** โจมตีปกติ ลูกหลาน override ได้ถ้าอยากให้ตีต่างออกไป (Polymorphism) */
     public String attack(Character target) {
-        int dmg = target.takeDamage(Dice.vary(getAtk()));
-        return name + " attacks " + target.getName() + " for " + dmg + " damage!";
+        int dmg = dealDamage(target, Dice.vary(getAtk()));
+        return name + " attacks " + target.getName() + (target.lastHitCritical ? " CRITICAL!" : "")
+                + " for " + dmg + " damage!";
+    }
+
+    /** ทำดาเมจใส่เป้าหมายโดยสุ่มคริติคอลตาม getCritChance() คืนดาเมจที่โดนจริง */
+    public int dealDamage(Character target, int rawDamage) {
+        return dealDamage(target, rawDamage, false);
+    }
+
+    /**
+     * เหมือนด้านบน ถ้า ignoreDef = true ดาเมจจะไม่ถูกลดด้วย DEF ของเป้าหมาย
+     * คริติคอลคูณเฉพาะดาเมจดิบ (ปัดลงขั้นต่ำ 1) ไม่คูณ DEF ที่ข้าม
+     */
+    public int dealDamage(Character target, int rawDamage, boolean ignoreDef) {
+        boolean crit = getCritChance() > 0 && Dice.chance(getCritChance());
+        int raw = crit ? Dice.floorMin1(rawDamage * CRIT_MULTIPLIER) : rawDamage;
+        if (ignoreDef) raw += target.getDef();
+        return target.takeDamage(raw, crit);
     }
 
     /** รับดาเมจหลังหักพลังป้องกัน คืนค่าดาเมจที่โดนจริง */

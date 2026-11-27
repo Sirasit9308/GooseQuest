@@ -13,7 +13,7 @@ public class MegaHonk implements Skill {
 
     @Override
     public String use(Character user, Character target) {
-        int dmg = target.takeDamage(Dice.vary(user.getAtk() * 3 / 2));
+        int dmg = user.dealDamage(target, Dice.vary(Dice.floorMin1(user.getAtk() * 1.5)));
         String msg = user.getName() + ": HOOOOONK!!! " + dmg + " damage!";
         if (Dice.chance(0.5)) {
             target.setStunned(true);

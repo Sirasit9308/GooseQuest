@@ -13,7 +13,7 @@ public class WingSlap implements Skill {
 
     @Override
     public String use(Character user, Character target) {
-        int dmg = target.takeDamage(Dice.vary(user.getAtk() * 2));
+        int dmg = user.dealDamage(target, Dice.vary(user.getAtk() * 2));
         return user.getName() + " uses WING SLAP! " + dmg + " damage!";
     }
 }
