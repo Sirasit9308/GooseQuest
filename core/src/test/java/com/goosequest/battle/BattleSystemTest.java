@@ -7,7 +7,7 @@ import com.goosequest.battle.HitEvent.Kind;
 import com.goosequest.character.Character;
 import com.goosequest.character.Enemy;
 import com.goosequest.character.Goose;
-import com.goosequest.character.WarriorGoose;
+import com.goosequest.character.SwordmanGoose;
 import com.goosequest.item.Bread;
 import com.goosequest.item.Inventory;
 import com.goosequest.skill.Skill;
@@ -33,7 +33,7 @@ class BattleSystemTest {
         };
     }
 
-    private final Goose hero = new WarriorGoose();
+    private final Goose hero = new SwordmanGoose();
     private final Enemy enemy = new Sponge();
     private final Inventory inventory = new Inventory();
     private final BattleSystem battle = new BattleSystem(hero, enemy, inventory);

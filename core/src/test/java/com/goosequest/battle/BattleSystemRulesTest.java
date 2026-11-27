@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.goosequest.character.Enemy;
 import com.goosequest.character.FarmerBoss;
 import com.goosequest.character.Goose;
-import com.goosequest.character.WarriorGoose;
+import com.goosequest.character.SwordmanGoose;
 import com.goosequest.item.Bread;
 import com.goosequest.item.Inventory;
 import com.goosequest.skill.Skill;
@@ -28,7 +28,7 @@ class BattleSystemRulesTest {
         };
     }
 
-    private final Goose hero = new WarriorGoose();
+    private final Goose hero = new SwordmanGoose();
     private final Inventory inventory = new Inventory();
 
     private BattleSystem fight(Enemy enemy) {

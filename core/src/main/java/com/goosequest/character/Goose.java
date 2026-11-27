@@ -14,6 +14,9 @@ public abstract class Goose extends Character {
     /** เลเวลที่ปลดล็อกสกิลที่ 2 ของทุกสาย (แก้ที่เดียวถ้าอยากเปลี่ยน) */
     protected static final int SECOND_SKILL_LEVEL = 3;
 
+    /** โอกาสคริติคอลพื้นฐานของห่านทุกสาย (ลูกหลานเปลี่ยนได้ผ่าน getCritChance) */
+    public static final double BASE_CRIT_CHANCE = 0.05;
+
     private final List<Skill> skills = new ArrayList<>();
     private int level = 1;
     private int exp = 0;
@@ -22,6 +25,9 @@ public abstract class Goose extends Character {
         super(name, maxHp, maxMp, atk, def);
         skills.add(firstSkill);
     }
+
+    @Override
+    public double getCritChance() { return BASE_CRIT_CHANCE; }
 
     /** เรียนสกิลใหม่ คืน false ถ้ามีสกิลนี้อยู่แล้ว (เทียบจากชื่อ) */
     public boolean learnSkill(Skill skill) {

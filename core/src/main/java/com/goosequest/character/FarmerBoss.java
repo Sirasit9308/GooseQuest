@@ -21,7 +21,7 @@ public class FarmerBoss extends Enemy {
             return getName() + " is FURIOUS! Pitchfork Fury! (ATK up)";
         }
         if (Dice.chance(enraged ? 0.4 : 0.2)) {
-            int dmg = target.takeDamage(Dice.vary(getAtk() * 3 / 2));
+            int dmg = target.takeDamage(Dice.vary(Dice.floorMin1(getAtk() * 1.5)));
             return getName() + " uses PITCHFORK SWEEP! " + dmg + " damage!";
         }
         return super.takeTurn(target);

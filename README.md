@@ -70,7 +70,7 @@ lwjgl3/   ตัวเปิดโปรแกรมบนคอม (ไม่�
 | หลักการ | ตัวอย่างในโค้ด |
 |---|---|
 | **Encapsulation** | `Character` เก็บ `hp`, `atk` เป็น `private` ต้องแก้ผ่าน `takeDamage()` / `heal()` เท่านั้น HP จึงไม่ติดลบ · `Inventory.getItems()` คืน list แบบอ่านอย่างเดียว |
-| **Inheritance** | `WarriorGoose → Goose → Character` · `Dog → Enemy → Character` · `Player → Entity → GameObject` · `GrassTile → Tile` |
+| **Inheritance** | `SwordmanGoose → Goose → Character` · `Dog → Enemy → Character` · `Player → Entity → GameObject` · `GrassTile → Tile` |
 | **Polymorphism** | `Enemy.takeTurn()` แต่ละศัตรูออกท่าต่างกัน · `Goose.onLevelUp()` แต่ละสายเก่งขึ้นต่างกัน · `Interactable.interact()` ชน NPC = คุย, ชนศัตรู = สู้, ชนไอเทม = เก็บ · `Tile.onStep()` ประตูวาร์ป |
 | **Abstraction** | `Character`, `Goose`, `Enemy`, `Item`, `Tile`, `GameObject`, `GameState` เป็น abstract class · `Skill`, `Interactable` เป็น interface |
 | **Composition** | `MapEnemy` (ตัวบนแผนที่) เก็บ `Enemy` (ข้อมูลต่อสู้) ไว้ข้างใน · `Goose` มี `Skill` |
@@ -86,9 +86,9 @@ lwjgl3/   ตัวเปิดโปรแกรมบนคอม (ไม่�
 
 | สาย | อัตราชนะ | ระดับ |
 |---|---|---|
-| Warrior | ~100% | ง่าย |
-| Honker | ~90% | ปกติ |
-| Ninja | ~72% | ยาก |
+| Swordman | ~100% | ง่าย |
+| Honk | ~90% | ปกติ |
+| Thief | ~72% | ยาก |
 
 ตัวเลขทั้งหมดอยู่ใน constructor ของแต่ละคลาส เช่น `super("THE FARMER", 300, 22, 6, 100)` = ชื่อ, HP, ATK, DEF, EXP
 

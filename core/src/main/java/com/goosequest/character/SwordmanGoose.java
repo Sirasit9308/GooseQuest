@@ -4,8 +4,8 @@ import com.goosequest.skill.WarCry;
 import com.goosequest.skill.WingSlap;
 
 /** [คนที่ 1] สายนักรบ: HP และพลังป้องกันสูง */
-public class WarriorGoose extends Goose {
-    public WarriorGoose() {
+public class SwordmanGoose extends Goose {
+    public SwordmanGoose() {
         super("Sir Honksalot", 120, 20, 14, 5, new WingSlap());
     }
 
@@ -16,5 +16,5 @@ public class WarriorGoose extends Goose {
     }
 
     @Override
-    public String getClassName() { return "Warrior"; }
+    public String getClassName() { return "Swordman"; }
 }

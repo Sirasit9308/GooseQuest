@@ -4,8 +4,8 @@ import com.goosequest.skill.MegaHonk;
 import com.goosequest.skill.SoothingSong;
 
 /** [คนที่ 1] สายนักร้อง: MP เยอะ ร้องจนศัตรูมึน */
-public class HonkerGoose extends Goose {
-    public HonkerGoose() {
+public class HonkGoose extends Goose {
+    public HonkGoose() {
         super("Honkzilla", 100, 40, 12, 3, new MegaHonk());
     }
 
@@ -16,5 +16,5 @@ public class HonkerGoose extends Goose {
     }
 
     @Override
-    public String getClassName() { return "Honker"; }
+    public String getClassName() { return "Honk"; }
 }

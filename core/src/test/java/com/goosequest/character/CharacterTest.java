@@ -78,7 +78,7 @@ class CharacterTest {
 
     @Test
     void levelUpHappensExactlyAtExpToNext() {
-        Goose g = new WarriorGoose();
+        Goose g = new SwordmanGoose();
         int need = g.expToNext();
         g.gainExp(need - 1);
         assertEquals(1, g.getLevel());
@@ -90,7 +90,7 @@ class CharacterTest {
 
     @Test
     void levelUpCarriesOverExtraExp() {
-        Goose g = new WarriorGoose();
+        Goose g = new SwordmanGoose();
         g.gainExp(g.expToNext() + 5);
         assertEquals(2, g.getLevel());
         assertEquals(5, g.getExp());
@@ -98,7 +98,7 @@ class CharacterTest {
 
     @Test
     void levelUpRestoresHpAndMpToFull() {
-        Goose g = new WarriorGoose();
+        Goose g = new SwordmanGoose();
         g.takeDamage(g.getDef() + 20);
         g.spendMp(1);
         g.gainExp(g.expToNext());

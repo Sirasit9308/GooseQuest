@@ -4,9 +4,9 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.goosequest.GameManager;
 import com.goosequest.character.Goose;
-import com.goosequest.character.HonkerGoose;
-import com.goosequest.character.NinjaGoose;
-import com.goosequest.character.WarriorGoose;
+import com.goosequest.character.HonkGoose;
+import com.goosequest.character.ThiefGoose;
+import com.goosequest.character.SwordmanGoose;
 import com.goosequest.util.Art;
 import com.goosequest.util.Keys;
 
@@ -15,8 +15,8 @@ import java.util.function.Supplier;
 
 /** หน้าแรก: เลือกสายอาชีพห่าน */
 public class TitleState extends GameState {
-    private final List<Supplier<Goose>> choices = List.of(WarriorGoose::new, HonkerGoose::new, NinjaGoose::new);
-    private final List<Goose> previews = List.of(new WarriorGoose(), new HonkerGoose(), new NinjaGoose());
+    private final List<Supplier<Goose>> choices = List.of(SwordmanGoose::new, HonkGoose::new, ThiefGoose::new);
+    private final List<Goose> previews = List.of(new SwordmanGoose(), new HonkGoose(), new ThiefGoose());
     private int cursor = 0;
 
     public TitleState(GameManager gm) {

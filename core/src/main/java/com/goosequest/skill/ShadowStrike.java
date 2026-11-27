@@ -13,8 +13,8 @@ public class ShadowStrike implements Skill {
 
     @Override
     public String use(Character user, Character target) {
-        // บวก DEF ของเป้าหมายกลับเข้าไป เพื่อให้ takeDamage() หักออกแล้วเท่ากับไม่โดนลด
-        int dmg = target.takeDamage(Dice.vary(user.getAtk() * 2) + target.getDef());
+        // ignoreDef = true: ดาเมจไม่ถูกลดด้วย DEF (คริติคอลคูณเฉพาะดาเมจดิบ)
+        int dmg = user.dealDamage(target, Dice.vary(user.getAtk() * 2), true);
         return user.getName() + " uses SHADOW STRIKE! Ignores defense! " + dmg + " damage!";
     }
 }
