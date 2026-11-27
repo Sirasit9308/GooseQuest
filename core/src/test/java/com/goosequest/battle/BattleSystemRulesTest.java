@@ -153,12 +153,37 @@ class BattleSystemRulesTest {
         int def = enemy.getDef() - 5 - 3;
 
         fleeUntilEscaped(battle);
+        battle.leaveBattle();
 
         assertEquals(enemy.getMaxHp(), enemy.getHp());
         assertFalse(enemy.isStunned());
         assertFalse(enemy.hasTimedBuff("test"));
         assertEquals(atk, enemy.getAtk());
         assertEquals(def, enemy.getDef());
+    }
+
+    @Test
+    void enemyHpIsUnchangedUntilTheBattleIsLeft() {
+        Enemy enemy = new TestEnemy(30, 1, 0, 0);
+        BattleSystem battle = fight(enemy);
+        enemy.takeDamage(enemy.getDef() + 13); // 17/30
+
+        fleeUntilEscaped(battle);
+
+        // หน้าจอยังวาดอยู่ช่วงนี้: ต้องเห็น 17/30 ไม่ใช่ 30/30
+        assertEquals(17, enemy.getHp());
+
+        battle.leaveBattle();
+        assertEquals(30, enemy.getHp());
+    }
+
+    @Test
+    void leavingAfterAWinDoesNotResetTheEnemy() {
+        Enemy enemy = new TestEnemy(1, 1, 0, 0);
+        BattleSystem battle = fight(enemy);
+        battle.attack();
+        battle.leaveBattle();
+        assertEquals(0, enemy.getHp());
     }
 
     @Test
