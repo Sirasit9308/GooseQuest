@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.goosequest.character.Enemy;
 import com.goosequest.character.FarmerBoss;
 import com.goosequest.character.Goose;
+import com.goosequest.character.StatusEffect;
 import com.goosequest.character.SwordmanGoose;
 import com.goosequest.item.Bread;
 import com.goosequest.item.Inventory;
@@ -147,17 +148,17 @@ class BattleSystemRulesTest {
         BattleSystem battle = fight(enemy);
         enemy.takeDamage(enemy.getDef() + 600);
         enemy.setStunned(true);
+        int atk = enemy.getAtk();
+        int def = enemy.getDef();
         enemy.addBuff(5, 5);
-        enemy.applyTimedBuff("test", 3, 3, 5);
-        int atk = enemy.getAtk() - 5 - 3;
-        int def = enemy.getDef() - 5 - 3;
+        enemy.applyStatus(StatusEffect.STRENGTH, 5);
 
         fleeUntilEscaped(battle);
         battle.leaveBattle();
 
         assertEquals(enemy.getMaxHp(), enemy.getHp());
         assertFalse(enemy.isStunned());
-        assertFalse(enemy.hasTimedBuff("test"));
+        assertFalse(enemy.hasStatus(StatusEffect.STRENGTH));
         assertEquals(atk, enemy.getAtk());
         assertEquals(def, enemy.getDef());
     }

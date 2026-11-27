@@ -3,8 +3,9 @@ package com.goosequest.character;
 import com.goosequest.util.Dice;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +26,8 @@ public abstract class Character {
     private int def;
     private int tempAtk;
     private int tempDef;
-    private final Map<String, TimedBuff> timedBuffs = new LinkedHashMap<>();
+    private final Map<StatusEffect, StatusState> statuses = new EnumMap<>(StatusEffect.class);
+    private boolean acting;
     private boolean stunned;
     private boolean lastHitCritical;
 
@@ -127,35 +129,80 @@ public abstract class Character {
     public void clearBuffs() {
         tempAtk = 0;
         tempDef = 0;
-        timedBuffs.clear();
+        statuses.clear();
+        acting = false;
+    }
+
+    // ---------- สถานะ (Weakness, Poison ฯลฯ) ----------
+
+    /**
+     * ติดสถานะ turns เทิร์น ติดซ้ำจะไม่ซ้อนกัน เทียบเวลาที่เหลือกับเวลาใหม่ ใครมากกว่าใช้อันนั้น
+     * (เท่ากันคงของเดิม) เวลาลดตอนจบเทิร์นของตัวละครที่ติดสถานะเอง ส่วน Poison ลดตอนเริ่มเทิร์น
+     * พร้อมเสียเลือด ถ้าติดตัวเองระหว่างเทิร์นตัวเอง (เช่น Enrage) จบเทิร์นนั้นจะยังไม่ลด
+     * จึงได้ครบ turns เทิร์นถัดไป คืน true ถ้าสถานะถูกติดหรือต่อเวลาจริง
+     */
+    public boolean applyStatus(StatusEffect effect, int turns) {
+        if (turns <= 0) return false;
+        StatusState old = statuses.get(effect);
+        if (old != null && old.remaining() >= turns) return false;
+        statuses.put(effect, new StatusState(turns, acting && !effect.isPoison()));
+        return true;
+    }
+
+    public boolean hasStatus(StatusEffect effect) {
+        return statuses.containsKey(effect);
+    }
+
+    /** จำนวนเทิร์นที่เหลือของสถานะ (0 ถ้าไม่ได้ติด) */
+    public int getStatusTurns(StatusEffect effect) {
+        StatusState s = statuses.get(effect);
+        return s == null ? 0 : s.turnsLeft;
+    }
+
+    /** สถานะที่ติดอยู่ทั้งหมดพร้อมเทิร์นที่เหลือ (อ่านอย่างเดียว) */
+    public Map<StatusEffect, Integer> getStatuses() {
+        Map<StatusEffect, Integer> copy = new EnumMap<>(StatusEffect.class);
+        for (Map.Entry<StatusEffect, StatusState> e : statuses.entrySet()) {
+            copy.put(e.getKey(), e.getValue().turnsLeft);
+        }
+        return Collections.unmodifiableMap(copy);
+    }
+
+    /** เปิดเทิร์นโดยไม่ทำพิษ (ใช้ตอนเริ่มสู้ให้เทิร์นแรกของห่านนับว่า "กำลังเล่น") */
+    public void beginTurn() {
+        acting = true;
     }
 
     /**
-     * บัฟแบบนับเทิร์น: ใช้ id เดิมซ้ำจะไม่ซ้อนกัน แต่แทนที่ของเดิมแล้วเริ่มนับใหม่
-     * นับเฉพาะเทิร์นหลังจากเทิร์นที่ใช้ (turns = 3 → มีผลต่ออีก 3 เทิร์นถัดไป)
-     * หมดเวลาโดย tickBuffs() ที่ BattleSystem เรียกตอนจบทุกรอบ
+     * เริ่มเทิร์นของตัวละครนี้: ถ้าติด Poison จะเสียเลือด 5% ของ maxHp (ขั้นต่ำ 1 ไม่ลดด้วย DEF)
+     * และลดเวลา Poison ลง 1 เทิร์นทันที คืนค่าดาเมจพิษที่เสียจริง (0 ถ้าไม่ติดพิษ)
      */
-    public void applyTimedBuff(String id, int atkAmount, int defAmount, int turns) {
-        // +1 เพราะรอบที่ใช้สกิลก็ถูก tick ด้วย แต่ไม่ถือเป็นหนึ่งในจำนวนเทิร์นที่ได้
-        timedBuffs.put(id, new TimedBuff(atkAmount, defAmount, turns + 1));
+    public int startTurn() {
+        beginTurn();
+        int dmg = 0;
+        for (Iterator<Map.Entry<StatusEffect, StatusState>> it = statuses.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry<StatusEffect, StatusState> entry = it.next();
+            if (!entry.getKey().isPoison()) continue;
+            int lost = Dice.floorMin1(maxHp * entry.getKey().getPoisonRate());
+            int before = hp;
+            hp = Math.max(0, hp - lost);
+            dmg += before - hp;
+            if (--entry.getValue().turnsLeft <= 0) it.remove();
+        }
+        return dmg;
     }
 
-    /** ยกเลิกบัฟแบบนับเทิร์นก่อนหมดเวลา คืน true ถ้ามีบัฟนั้นอยู่ */
-    public boolean removeTimedBuff(String id) {
-        return timedBuffs.remove(id) != null;
-    }
-
-    public boolean hasTimedBuff(String id) {
-        return timedBuffs.containsKey(id);
-    }
-
-    /** จบหนึ่งรอบ: ลดเวลาบัฟทุกอัน คืน id ของบัฟที่เพิ่งหมด */
-    public List<String> tickBuffs() {
-        List<String> expired = new ArrayList<>();
-        Iterator<Map.Entry<String, TimedBuff>> it = timedBuffs.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<String, TimedBuff> entry = it.next();
-            if (--entry.getValue().turnsLeft <= 0) {
+    /** จบเทิร์นของตัวละครนี้ (หลัง action เสร็จ): ลดเวลาสถานะที่ไม่ใช่ Poison คืนสถานะที่เพิ่งหมด */
+    public List<StatusEffect> endTurn() {
+        acting = false;
+        List<StatusEffect> expired = new ArrayList<>();
+        for (Iterator<Map.Entry<StatusEffect, StatusState>> it = statuses.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry<StatusEffect, StatusState> entry = it.next();
+            if (entry.getKey().isPoison()) continue;
+            StatusState s = entry.getValue();
+            if (s.skipNextTick) {
+                s.skipNextTick = false;
+            } else if (--s.turnsLeft <= 0) {
                 expired.add(entry.getKey());
                 it.remove();
             }
@@ -163,28 +210,30 @@ public abstract class Character {
         return expired;
     }
 
-    private int timedAtk() {
-        int sum = 0;
-        for (TimedBuff b : timedBuffs.values()) sum += b.atk;
-        return sum;
-    }
-
-    private int timedDef() {
-        int sum = 0;
-        for (TimedBuff b : timedBuffs.values()) sum += b.def;
-        return sum;
-    }
-
-    private static final class TimedBuff {
-        final int atk;
-        final int def;
+    private static final class StatusState {
         int turnsLeft;
+        boolean skipNextTick;
 
-        TimedBuff(int atk, int def, int turnsLeft) {
-            this.atk = atk;
-            this.def = def;
+        StatusState(int turnsLeft, boolean skipNextTick) {
             this.turnsLeft = turnsLeft;
+            this.skipNextTick = skipNextTick;
         }
+
+        /** จำนวนเทิร์นที่ยังมีผลจริง (อันที่ยังไม่โดนลดในเทิร์นที่ติดนับเพิ่มอีก 1) */
+        int remaining() { return turnsLeft + (skipNextTick ? 1 : 0); }
+    }
+
+    /** ATK/DEF ฐาน (รวมบัฟคงที่) บวกส่วนที่เพิ่ม/ลดจากสถานะ แต่ละสถานะคิด % จากค่าฐาน ปัดลงขั้นต่ำ 1 */
+    private int withStatuses(int base, boolean forAtk) {
+        if (base <= 0) return 0;
+        int total = base;
+        for (StatusEffect effect : statuses.keySet()) {
+            double rate = forAtk ? effect.getAtkRate() : effect.getDefRate();
+            if (rate == 0) continue;
+            int change = Dice.floorMin1(Math.abs(base) * Math.abs(rate));
+            total += rate > 0 ? change : -change;
+        }
+        return Math.max(0, total);
     }
 
     /** ให้คลาสลูกเพิ่มสถานะได้ตอนเลเวลอัป (protected = เฉพาะลูกหลาน) */
@@ -207,7 +256,7 @@ public abstract class Character {
     public int getMp() { return mp; }
     public int getMaxMp() { return maxMp; }
     /** ATK รวมบัฟชั่วคราว ถ้าต่ำกว่า 0 นับเป็น 0 */
-    public int getAtk() { return Math.max(0, atk + tempAtk + timedAtk()); }
-    /** DEF รวมบัฟชั่วคราว ถ้าต่ำกว่า 0 นับเป็น 0 */
-    public int getDef() { return Math.max(0, def + tempDef + timedDef()); }
+    public int getAtk() { return withStatuses(Math.max(0, atk + tempAtk), true); }
+    /** DEF รวมบัฟชั่วคราวและสถานะ ถ้าต่ำกว่า 0 นับเป็น 0 */
+    public int getDef() { return withStatuses(Math.max(0, def + tempDef), false); }
 }
