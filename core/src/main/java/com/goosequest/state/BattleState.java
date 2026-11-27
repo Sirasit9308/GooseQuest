@@ -33,6 +33,10 @@ public class BattleState extends GameState {
     private static final float FLOAT_RISE = 50f;
     private static final float FLOAT_SCALE = 2.2f;   // ขนาดตัวเลขปกติ (ฟอนต์ปกติ = 1)
     private static final float CRIT_SCALE = 3.4f;    // คริติคอลใหญ่กว่าและเป็นสีแดง
+    private static final float STATUS_ROW_H = 38f;   // ความสูงแถวไอคอนสถานะใต้กรอบ HP
+    private static final float MP_ROW_H = 18f;       // ที่ที่หลอด MP กินในกรอบ
+    private static final float ICON_SIZE = 24f;
+    private static final float ICON_STEP = 46f;      // ระยะห่างต่อไอคอน (6 สถานะยังพอดีกรอบ)
 
     /** เอฟเฟกต์หนึ่งอันที่กำลังเล่น: รอ delay ก่อนแล้วนับ age */
     private static final class Fx {
@@ -55,6 +59,7 @@ public class BattleState extends GameState {
     private final ExploreState explore;
     private final MapEnemy mapEnemy;
     private final BattleSystem battle;
+    private final StatusIcons statusIcons;
     private Mode mode = Mode.COMMAND;
     private int cursor = 0;
 
@@ -63,6 +68,12 @@ public class BattleState extends GameState {
         this.explore = explore;
         this.mapEnemy = mapEnemy;
         this.battle = new BattleSystem(gm.getHero(), mapEnemy.getEnemy(), gm.getInventory());
+        this.statusIcons = new StatusIcons();
+    }
+
+    @Override
+    public void dispose() {
+        statusIcons.dispose();
     }
 
     @Override
@@ -291,11 +302,29 @@ public class BattleState extends GameState {
         gm.shapes.ellipse(x + 16, y + 4, w - 32, h - 18);
     }
 
+    /** y คือขอบล่างของส่วนบน (ชื่อ + HP/MP) ส่วนแถวไอคอนสถานะต่อลงไปข้างล่าง STATUS_ROW_H */
     private void statusPanel(Character c, float x, float y) {
-        Art.box(gm.shapes, x, y, 290, 80);
+        float shift = panelShift(c);
+        Art.box(gm.shapes, x, y - STATUS_ROW_H + shift, 290, 80 + STATUS_ROW_H - shift);
         Art.bar(gm.shapes, x + 50, y + 30, 220, 12, (float) c.getHp() / c.getMaxHp(), Palette.HP);
         if (c.getMaxMp() > 0) {
             Art.bar(gm.shapes, x + 50, y + 12, 220, 8, (float) c.getMp() / c.getMaxMp(), Palette.MP);
+        }
+    }
+
+    /** ตัวที่ไม่มี MP (ศัตรู) ไม่ต้องเว้นที่หลอด MP กรอบจึงสั้นลงเท่านี้ */
+    private static float panelShift(Character c) {
+        return c.getMaxMp() > 0 ? 0f : MP_ROW_H;
+    }
+
+    /** แถวไอคอนสถานะ: ไอคอนแต่ละอันตามด้วยจำนวนเทิร์นที่เหลือ (ต้องเรียกตอน batch เปิดอยู่) */
+    private void drawStatusIcons(Character c, float x, float y) {
+        float cx = x + 14;
+        float iconY = y - STATUS_ROW_H + panelShift(c) + 8;
+        for (var entry : c.getStatuses().entrySet()) {
+            gm.batch.draw(statusIcons.get(entry.getKey()), cx, iconY, ICON_SIZE, ICON_SIZE);
+            gm.font.draw(gm.batch, String.valueOf(entry.getValue()), cx + ICON_SIZE + 3, iconY + ICON_SIZE - 5);
+            cx += ICON_STEP;
         }
     }
 
@@ -306,6 +335,9 @@ public class BattleState extends GameState {
         gm.font.draw(gm.batch, enemy.getName() + (enemy.isStunned() ? "  [STUNNED]" : ""), 55, 538);
         gm.font.draw(gm.batch, "HP", 55, 512);
         gm.font.draw(gm.batch, enemy.getHp() + "/" + enemy.getMaxHp(), 230, 538);
+        gm.batch.setColor(Color.WHITE);
+        drawStatusIcons(enemy, 40, 470);
+        drawStatusIcons(hero, 470, 250);
         gm.font.draw(gm.batch, hero.getName() + "  Lv " + hero.getLevel(), 485, 318);
         gm.font.draw(gm.batch, "HP", 485, 292);
         gm.font.draw(gm.batch, "MP", 485, 272);
