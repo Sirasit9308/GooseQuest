@@ -193,6 +193,7 @@ public class BattleState extends GameState {
     }
 
     private void finish() {
+        battle.leaveBattle(); // ศัตรูที่เราหนีมาจะฟื้นตอนนี้ ไม่ใช่ตอนกดหนี (กันตัวเลข HP กระโดดบนจอ)
         switch (battle.getResult()) {
             case WON -> {
                 explore.onEnemyDefeated(mapEnemy);
