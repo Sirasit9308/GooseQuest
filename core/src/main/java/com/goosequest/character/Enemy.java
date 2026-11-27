@@ -22,6 +22,16 @@ public abstract class Enemy extends Character {
     /** ของที่ดรอปตอนแพ้ ค่าเริ่มต้นคือไม่ดรอป */
     public Item rollDrop() { return null; }
 
+    /**
+     * ผู้เล่นหนีสำเร็จ: ศัตรูกลับมาเหมือนยังไม่เคยสู้ (HP เต็ม ไม่มีบัฟ/ดีบัฟ ไม่มึน)
+     * ศัตรูที่เปลี่ยนสถานะถาวรระหว่างสู้ (เช่น บอสโกรธ) ให้ override แล้วเรียก super
+     */
+    public void resetAfterFlee() {
+        heal(getMaxHp());
+        clearBuffs();
+        setStunned(false);
+    }
+
     public boolean canFlee() { return true; }
     public boolean isBoss() { return false; }
     public int getExpReward() { return expReward; }

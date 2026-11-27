@@ -71,6 +71,8 @@ public class BattleSystem {
             log.add("You waddled away safely!");
             result = Result.FLED;
             endBattle();
+            // หนีสำเร็จ: ศัตรูฟื้นเต็มและล้างสถานะ ส่วน HP ของห่านยังลดเหมือนเดิม
+            enemy.resetAfterFlee();
         } else {
             log.add("Couldn't escape!");
             enemyTurn();
