@@ -3,6 +3,7 @@ package com.goosequest.battle;
 import com.goosequest.character.Character;
 import com.goosequest.character.Enemy;
 import com.goosequest.character.Goose;
+import com.goosequest.character.StatusEffect;
 import com.goosequest.item.Inventory;
 import com.goosequest.item.Item;
 import com.goosequest.util.Dice;
@@ -10,6 +11,7 @@ import com.goosequest.util.Dice;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
@@ -33,6 +35,7 @@ public class BattleSystem {
         this.enemy = enemy;
         this.inventory = inventory;
         log.add(enemy.getName() + " blocks your path!");
+        hero.beginTurn(); // เทิร์นแรกของห่าน (ยังไม่มีพิษให้ทำงาน แค่เปิดรอบ)
     }
 
     // ---------- คำสั่งของผู้เล่น ----------
@@ -73,6 +76,7 @@ public class BattleSystem {
             endBattle();
         } else {
             log.add("Couldn't escape!");
+            endTurn(hero);
             enemyTurn();
         }
     }
@@ -89,9 +93,10 @@ public class BattleSystem {
     // ---------- เหตุการณ์สำหรับเอฟเฟกต์ ----------
 
     /** สถานะที่เปรียบเทียบก่อน/หลังการกระทำ เพื่อรู้ว่าอะไรเปลี่ยนไป */
-    private record Snapshot(int hp, int atk, int def, boolean stunned) {
+    private record Snapshot(int hp, int atk, int def, boolean stunned, Set<StatusEffect> statuses) {
         static Snapshot of(Character c) {
-            return new Snapshot(c.getHp(), c.getAtk(), c.getDef(), c.isStunned());
+            return new Snapshot(c.getHp(), c.getAtk(), c.getDef(), c.isStunned(),
+                    Set.copyOf(c.getStatuses().keySet()));
         }
     }
 
@@ -121,6 +126,11 @@ public class BattleSystem {
         if (!before.stunned() && after.stunned()) {
             events.add(HitEvent.other(HitEvent.Kind.STATUS, onHero, "STUN"));
         }
+        for (StatusEffect s : after.statuses()) {
+            if (!before.statuses().contains(s)) {
+                events.add(HitEvent.other(HitEvent.Kind.STATUS, onHero, s.getLabel().toUpperCase()));
+            }
+        }
     }
 
     private void statEvent(boolean onHero, String stat, int change) {
@@ -143,11 +153,21 @@ public class BattleSystem {
         if (!enemy.isAlive()) {
             win();
         } else {
+            endTurn(hero);
             enemyTurn();
         }
     }
 
+    /**
+     * เทิร์นศัตรู: เริ่มเทิร์น (พิษทำงาน) → action → จบเทิร์น (ลดเวลาสถานะอื่น)
+     * แล้วเข้าเทิร์นห่านถัดไป (พิษของห่านทำงานตรงนี้)
+     */
     private void enemyTurn() {
+        startTurn(enemy);
+        if (!enemy.isAlive()) {
+            win();
+            return;
+        }
         if (enemy.isStunned()) {
             enemy.setStunned(false);
             log.add(enemy.getName() + " is stunned and can't move!");
@@ -155,18 +175,34 @@ public class BattleSystem {
             log.add(track(() -> enemy.takeTurn(hero)));
         }
         if (!hero.isAlive()) {
-            result = Result.LOST;
-            log.add(hero.getName() + " fainted...");
-            endBattle();
-        } else {
-            tickBuffs();
+            lose();
+            return;
+        }
+        endTurn(enemy);
+        startTurn(hero);
+        if (!hero.isAlive()) lose();
+    }
+
+    /** เริ่มเทิร์นของตัวละคร: เสียเลือดจากพิษ (ถ้ามี) พร้อมบันทึกเอฟเฟกต์ */
+    private void startTurn(Character c) {
+        String msg = track(() -> {
+            int dmg = c.startTurn();
+            return dmg > 0 ? c.getName() + " suffers " + dmg + " poison damage!" : null;
+        });
+        if (msg != null) log.add(msg);
+    }
+
+    /** จบเทิร์นของตัวละคร: ลดเวลาสถานะ แล้วแจ้งสถานะที่หมด */
+    private void endTurn(Character c) {
+        for (StatusEffect s : c.endTurn()) {
+            log.add(c.getName() + "'s " + s.getLabel() + " wore off.");
         }
     }
 
-    /** จบหนึ่งรอบ (ผู้เล่น + ศัตรู): ลดเวลาบัฟแบบนับเทิร์น */
-    private void tickBuffs() {
-        if (!hero.tickBuffs().isEmpty()) log.add(hero.getName() + "'s buff wore off.");
-        if (!enemy.tickBuffs().isEmpty()) log.add(enemy.getName() + "'s buff wore off.");
+    private void lose() {
+        result = Result.LOST;
+        log.add(hero.getName() + " fainted...");
+        endBattle();
     }
 
     /** จบการต่อสู้ (ชนะ แพ้ หนี) ล้างบัฟชั่วคราวของทั้งสองฝั่ง */
