@@ -250,7 +250,7 @@ public class BattleState extends GameState {
         Art.box(gm.shapes, 10, 10, 560, 180);
         Art.box(gm.shapes, 580, 10, 210, 180);
         if (mode != Mode.END && mode != Mode.ANIM) {
-            Art.cursor(gm.shapes, 598, 150 - cursor * 30, 12);
+            Art.cursor(gm.shapes, 598, 150 - cursorRow() * 30, 12);
         }
         gm.shapes.end();
 
@@ -386,6 +386,19 @@ public class BattleState extends GameState {
         drawFloatingText();
         gm.font.setColor(Color.WHITE);
         gm.batch.end();
+    }
+
+    /** แถวบนหน้าจอ (0-4) ที่ cursor อยู่ ต้องตรงกับการเลื่อนรายการใน draw */
+    private int cursorRow() {
+        if (mode == Mode.SKILL) {
+            int total = battle.getHero().getSkills().size() + 1;
+            return cursor - Math.max(0, Math.min(cursor - 4, total - 5));
+        }
+        if (mode == Mode.ITEM) {
+            int total = gm.getInventory().getItems().size() + 1;
+            return cursor - Math.max(0, Math.min(cursor - 3, total - 5));
+        }
+        return cursor;
     }
 
     /** ตัวเลขดาเมจ/ฮีล/บัฟที่ลอยขึ้นเหนือตัวละครแล้วจางหาย (ต้องเรียกตอน batch เปิดอยู่) */
