@@ -43,7 +43,7 @@ core/src/main/java/com/goosequest/
 ├── GooseQuestGame.java       จุดเริ่มเกม (ทุกคน)
 ├── GameManager.java          stack ของ state + ข้อมูลร่วม (ทุกคน)
 │
-├── character/   [คนที่ 1]    Character, Goose, 3 สายห่าน, Enemy, ศัตรู 5 ชนิด
+├── character/   [คนที่ 1]    Character, Goose, 3 สายห่าน, Enemy, ศัตรู 9 ชนิด (รวมบอส)
 ├── skill/       [คนที่ 1]    Skill (interface), WingSlap, MegaHonk, SneakyPeck
 ├── battle/      [คนที่ 1]    BattleSystem (กติกาการต่อสู้ ไม่มีโค้ดวาดภาพ)
 ├── state/BattleState.java  [คนที่ 1]   หน้าจอต่อสู้
@@ -99,7 +99,7 @@ lwjgl3/   ตัวเปิดโปรแกรมบนคอม (ไม่�
 **คนที่ 1 (ต่อสู้)**
 - [ ] เพิ่มสกิลที่ 2 ให้แต่ละสาย (ปลดล็อกตอน Lv 3) แล้วเปลี่ยน `Goose` ให้เก็บ `List<Skill>`
 - [ ] เอฟเฟกต์ตอนโดนตี เช่นตัวสั่นหรือกระพริบ และตัวเลขดาเมจลอยขึ้น
-- [ ] เพิ่มศัตรูอีก 1–2 ชนิด
+- [x] เพิ่มศัตรูอีก 4 ชนิด (Squirrel, Cobra, Turtle, Worranut) และให้ศัตรูสตันห่านได้
 
 **คนที่ 2 (เนื้อหา)**
 - [ ] **Save / Load** ลงไฟล์ (ใช้ `Gdx.files.local("save.json")` คู่กับ `com.badlogic.gdx.utils.Json`)
