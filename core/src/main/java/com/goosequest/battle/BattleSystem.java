@@ -180,7 +180,17 @@ public class BattleSystem {
         }
         endTurn(enemy);
         startTurn(hero);
-        if (!hero.isAlive()) lose();
+        if (!hero.isAlive()) {
+            lose();
+            return;
+        }
+        // ห่านโดนสตัน: เสียเทิร์นนี้ (พิษทำงานไปแล้วตามปกติ) แล้วศัตรูได้เดินต่อ
+        if (hero.isStunned()) {
+            hero.setStunned(false);
+            log.add(hero.getName() + " is stunned and can't move!");
+            endTurn(hero);
+            enemyTurn();
+        }
     }
 
     /** เริ่มเทิร์นของตัวละคร: เสียเลือดจากพิษ (ถ้ามี) พร้อมบันทึกเอฟเฟกต์ */
@@ -209,6 +219,7 @@ public class BattleSystem {
     private void endBattle() {
         hero.clearBuffs();
         enemy.clearBuffs();
+        hero.setStunned(false);
     }
 
     private void win() {
