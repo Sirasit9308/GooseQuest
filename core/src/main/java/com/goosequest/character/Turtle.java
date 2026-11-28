@@ -14,7 +14,7 @@ public class Turtle extends Enemy {
     private boolean shelled = false;
 
     public Turtle() {
-        super("Turtle", 85, 7, 10, 60);
+        super("Turtle", 100, 12, 20, 60);
     }
 
     @Override

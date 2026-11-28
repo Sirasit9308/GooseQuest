@@ -9,8 +9,8 @@ class SquirrelTest {
     @Test
     void hasTheDesignedStats() {
         Squirrel s = new Squirrel();
-        assertEquals(15, s.getMaxHp());
-        assertEquals(10, s.getAtk());
+        assertEquals(40, s.getMaxHp());
+        assertEquals(15, s.getAtk());
         assertEquals(0, s.getDef());
         assertEquals(10, s.getExpReward());
         assertTrue(s.canFlee());

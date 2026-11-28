@@ -10,7 +10,7 @@ public class Fox extends Enemy {
     private static final Color COLOR = new Color(0.95f, 0.45f, 0.1f, 1f);
 
     public Fox() {
-        super("Sly Fox", 40, 13, 2, 30);
+        super("Sly Fox", 60, 20, 1, 30);
     }
 
     @Override

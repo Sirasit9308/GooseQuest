@@ -9,7 +9,7 @@ class CobraTest {
     void hasTheDesignedStats() {
         Cobra c = new Cobra();
         assertEquals(60, c.getMaxHp());
-        assertEquals(7, c.getAtk());
+        assertEquals(10, c.getAtk());
         assertEquals(1, c.getDef());
         assertEquals(35, c.getExpReward());
         assertTrue(c.canFlee());

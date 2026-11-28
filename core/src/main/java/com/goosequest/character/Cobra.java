@@ -10,7 +10,7 @@ public class Cobra extends Enemy {
     private static final Color COLOR = new Color(0.35f, 0.65f, 0.25f, 1f);
 
     public Cobra() {
-        super("Cobra", 60, 7, 1, 35);
+        super("Cobra", 60, 10, 1, 35);
     }
 
     @Override

@@ -19,7 +19,7 @@ public class Worranut extends Enemy {
     private int turnsTaken = 0;
 
     public Worranut() {
-        super("Worranut", 100, 11, 4, 55);
+        super("Worranut", 180, 18, 5, 55);
     }
 
     @Override

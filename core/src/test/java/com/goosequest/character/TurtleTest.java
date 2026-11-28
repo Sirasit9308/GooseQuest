@@ -8,9 +8,9 @@ class TurtleTest {
     @Test
     void hasTheDesignedStats() {
         Turtle t = new Turtle();
-        assertEquals(85, t.getMaxHp());
-        assertEquals(7, t.getAtk());
-        assertEquals(10, t.getDef());
+        assertEquals(100, t.getMaxHp());
+        assertEquals(12, t.getAtk());
+        assertEquals(20, t.getDef());
         assertEquals(60, t.getExpReward());
         assertTrue(t.canFlee());
         assertFalse(t.isBoss());
@@ -33,7 +33,7 @@ class TurtleTest {
         assertFalse(hero.isStunned());
         assertTrue(turtle.hasStatus(StatusEffect.DURABILITY));
         assertEquals(Turtle.DURABILITY_TURNS, turtle.getStatusTurns(StatusEffect.DURABILITY));
-        assertEquals(12, turtle.getDef()); // 10 + 25% (ปัดลง) = 12
+        assertEquals(25, turtle.getDef()); // 20 + 25% = 25
     }
 
     @Test
@@ -66,7 +66,7 @@ class TurtleTest {
         turtle.resetAfterFlee();
 
         assertFalse(turtle.hasStatus(StatusEffect.DURABILITY));
-        assertEquals(10, turtle.getDef());
+        assertEquals(20, turtle.getDef());
         int hp = hero.getHp();
         turtle.takeTurn(hero);
         assertEquals(hp, hero.getHp());

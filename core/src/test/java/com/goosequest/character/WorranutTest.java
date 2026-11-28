@@ -18,9 +18,9 @@ class WorranutTest {
     @Test
     void hasTheDesignedStats() {
         Worranut w = new Worranut();
-        assertEquals(100, w.getMaxHp());
-        assertEquals(11, w.getAtk());
-        assertEquals(4, w.getDef());
+        assertEquals(180, w.getMaxHp());
+        assertEquals(18, w.getAtk());
+        assertEquals(5, w.getDef());
         assertEquals(55, w.getExpReward());
         assertTrue(w.canFlee());
         assertFalse(w.isBoss());
@@ -52,8 +52,8 @@ class WorranutTest {
 
     @Test
     void lickDealsHalfAtkDamage() {
-        // ATK 11 → 50% = 5, แกว่ง ±20% = 4..6 ก่อนหัก DEF ของห่าน
-        int maxRaw = 6;
+        // ATK 18 → 50% = 9, แกว่ง ±20% = 7..10 ก่อนหัก DEF ของห่าน
+        int maxRaw = 10;
         for (int i = 0; i < 100; i++) {
             Worranut w = new Worranut();
             int before = hero.getMaxHp();
