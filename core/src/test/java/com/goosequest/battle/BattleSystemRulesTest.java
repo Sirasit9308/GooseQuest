@@ -226,6 +226,47 @@ class BattleSystemRulesTest {
         assertEquals(atk + 6, boss.getAtk());
     }
 
+    /** ศัตรูที่สตันห่านในครั้งแรกที่ออกท่า แล้วตีธรรมดาครั้งต่อ ๆ ไป */
+    private static class StunnerEnemy extends Enemy {
+        int turns = 0;
+        StunnerEnemy() { super("Stunner", 1000, 1, 0, 0); }
+        @Override public String takeTurn(Character target) {
+            turns++;
+            if (turns == 1) {
+                target.setStunned(true);
+                return "Stunner headbutts!";
+            }
+            return super.takeTurn(target);
+        }
+        @Override public Color getColor() { return Color.WHITE; }
+    }
+
+    @Test
+    void stunnedHeroLosesTheTurnAndEnemyActsAgain() {
+        StunnerEnemy enemy = new StunnerEnemy();
+        BattleSystem battle = fight(enemy);
+
+        battle.attack();
+
+        assertEquals(2, enemy.turns); // ท่าสตัน + เทิร์นที่ห่านเสียไป
+        assertFalse(hero.isStunned());
+        assertTrue(battle.isOngoing());
+        assertTrue(battle.getRecentLog(5).stream().anyMatch(l -> l.contains("can't move")));
+        assertTrue(battle.drainEvents().stream().anyMatch(e ->
+                e.isOnHero() && e.getKind() == HitEvent.Kind.STATUS && e.getLabel().equals("STUN")));
+    }
+
+    @Test
+    void battleEndClearsHeroStun() {
+        BattleSystem battle = fight(new TestEnemy(1, 1, 0, 0));
+        hero.setStunned(true);
+
+        battle.attack();
+
+        assertEquals(BattleSystem.Result.WON, battle.getResult());
+        assertFalse(hero.isStunned());
+    }
+
     @Test
     void useItemNotInInventoryDoesNothing() {
         BattleSystem battle = fight(new TestEnemy(1000, 50, 0, 0));

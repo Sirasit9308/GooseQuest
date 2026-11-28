@@ -8,7 +8,7 @@ public class Chicken extends Enemy {
     private static final Color COLOR = new Color(0.95f, 0.85f, 0.6f, 1f);
 
     public Chicken() {
-        super("Angry Chicken", 22, 7, 0, 10);
+        super("Angry Chicken", 40, 10, 0, 10);
     }
 
     @Override

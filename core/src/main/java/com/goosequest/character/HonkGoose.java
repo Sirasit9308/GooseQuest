@@ -6,7 +6,7 @@ import com.goosequest.skill.Intimidate;
 /** [คนที่ 1] สายนักร้อง: MP เยอะ ร้องจนศัตรูมึน */
 public class HonkGoose extends Goose {
     public HonkGoose() {
-        super("Honkzilla", 100, 40, 12, 3, new MegaHonk());
+        super("Honkzilla", 100, 40, 14, 3, new MegaHonk());
     }
 
     @Override

@@ -2,10 +2,14 @@ package com.goosequest.world;
 
 import com.badlogic.gdx.graphics.Color;
 import com.goosequest.character.Chicken;
+import com.goosequest.character.Cobra;
 import com.goosequest.character.Dog;
 import com.goosequest.character.FarmerBoss;
 import com.goosequest.character.Fox;
 import com.goosequest.character.Gardener;
+import com.goosequest.character.Squirrel;
+import com.goosequest.character.Turtle;
+import com.goosequest.character.Worranut;
 import com.goosequest.item.Bread;
 import com.goosequest.item.GoldenFeather;
 import com.goosequest.item.PondWater;
@@ -97,6 +101,8 @@ public final class WorldBuilder {
         farm.place(new MapEnemy(new Dog(), true), 11, 10);
         farm.place(new MapEnemy(new Dog(), true), 20, 14);
         farm.place(new MapEnemy(new Chicken(), false), 19, 2);
+        farm.place(new MapEnemy(new Squirrel(), true), 3, 14);
+        farm.place(new MapEnemy(new Cobra(), false), 22, 5);
         farm.place(new ItemPickup(new GoldenFeather()), 5, 8);
         world.addMap(farm);
 
@@ -111,6 +117,8 @@ public final class WorldBuilder {
         park.place(new MapEnemy(new Gardener(), true), 8, 3);
         park.place(new MapEnemy(new Gardener(), true), 14, 12);
         park.place(new MapEnemy(new Fox(), false), 21, 8);
+        park.place(new MapEnemy(new Turtle(), false), 5, 13);
+        park.place(new MapEnemy(new Worranut(), false), 20, 13);
         park.place(new ItemPickup(new PondWater()), 3, 12);
         park.place(new ItemPickup(new Bread()), 22, 15);
         world.addMap(park);

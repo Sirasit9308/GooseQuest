@@ -10,7 +10,7 @@ public class Gardener extends Enemy {
     private static final Color COLOR = new Color(0.2f, 0.55f, 0.3f, 1f);
 
     public Gardener() {
-        super("Gardener", 45, 11, 3, 25);
+        super("Gardener", 90, 12, 4, 25);
     }
 
     @Override

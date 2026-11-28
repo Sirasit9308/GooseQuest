@@ -10,7 +10,7 @@ public class Dog extends Enemy {
     private static final Color COLOR = new Color(0.6f, 0.4f, 0.2f, 1f);
 
     public Dog() {
-        super("Farm Dog", 30, 9, 1, 15);
+        super("Farm Dog", 50, 13, 2, 15);
     }
 
     @Override
