@@ -12,6 +12,7 @@ import com.goosequest.item.Bread;
 import com.goosequest.item.Inventory;
 import com.goosequest.skill.Skill;
 import com.goosequest.skill.WarCry;
+import com.goosequest.util.Dice;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -169,6 +170,8 @@ class BattleSystemTest {
 
     @Test
     void normalDamageIsNotCritical() {
+        // ห่านมีโอกาสคริ 5% ถ้าไม่ล็อก seed test นี้จะสุ่มพังเองเป็นบางครั้ง
+        Dice.setSeed(1L);
         battle.attack();
         for (HitEvent e : battle.drainEvents()) assertFalse(e.isCritical());
     }
